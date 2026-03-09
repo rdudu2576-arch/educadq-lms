@@ -1,0 +1,237 @@
+import { TRPCError } from "@trpc/server";
+import { protectedProcedure, publicProcedure, router } from "../../_core/trpc";
+import { z } from "zod";
+import { loginUser, registerUser } from "../../services/auth.service";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: "/",
+};
+
+export const authRouter = router({
+  /**
+   * Get current user
+   */
+  me: publicProcedure.query(({ ctx }) => {
+    if (!ctx.user) {
+      return null;
+    }
+
+    return {
+      id: ctx.user.id,
+      email: ctx.user.email,
+      name: ctx.user.name,
+      role: ctx.user.role,
+      cpf: ctx.user.cpf,
+      phone: ctx.user.phone,
+      createdAt: ctx.user.createdAt,
+    };
+  }),
+
+  /**
+   * Login with email and password
+   */
+  login: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email("Invalid email format"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const { user, token } = await loginUser(input.email, input.password);
+
+        // Set token in httpOnly cookie
+        ctx.res.cookie("token", token, COOKIE_OPTIONS);
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Login failed";
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message,
+        });
+      }
+    }),
+
+  /**
+   * Register new user
+   */
+  register: publicProcedure
+    .input(
+      z.object({
+        email: z.string().email("Invalid email format"),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        name: z.string().min(2, "Name must be at least 2 characters"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const { user, token } = await registerUser(input.email, input.password, input.name);
+
+        // Set token in httpOnly cookie
+        ctx.res.cookie("token", token, COOKIE_OPTIONS);
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Registration failed";
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message,
+        });
+      }
+    }),
+
+  /**
+   * Logout
+   */
+  logout: publicProcedure.mutation(({ ctx }) => {
+    // Clear token cookie
+    ctx.res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return { success: true };
+  }),
+
+  /**
+   * Update own profile
+   */
+  updateProfile: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().optional(),
+        cpf: z.string().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zip: z.string().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.user) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Not authenticated",
+        });
+      }
+
+      try {
+        // Import db functions
+        const { updateUserProfile } = await import("../../infra/db");
+        const updated = await updateUserProfile(ctx.user.id, input);
+
+        return {
+          success: true,
+          user: updated,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update profile";
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message,
+        });
+      }
+    }),
+
+  /**
+   * Get user by ID (admin only)
+   */
+  getUserById: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (!ctx.user || ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can view user details",
+        });
+      }
+
+      try {
+        const { getUserById } = await import("../../services/auth.service");
+        const user = await getUserById(input.userId);
+
+        if (!user) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "User not found",
+          });
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          cpf: user.cpf,
+          phone: user.phone,
+          createdAt: user.createdAt,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get user",
+        });
+      }
+    }),
+
+  /**
+   * Update user role (admin only)
+   */
+  updateUserRole: protectedProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        role: z.enum(["admin", "professor", "user"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (!ctx.user || ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can update user roles",
+        });
+      }
+
+      try {
+        const { updateUserRole } = await import("../../infra/db");
+        const updated = await updateUserRole(input.userId, input.role);
+
+        return {
+          success: true,
+          user: updated,
+        };
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to update role";
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message,
+        });
+      }
+    }),
+});
