@@ -109,9 +109,18 @@ export default function LoginPage() {
 
             {/* Senha */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Senha
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-foreground">
+                  Senha
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setLocation("/forgot-password")}
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
@@ -142,6 +151,19 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Cadastro */}
+          <div className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              Ainda não tem uma conta?
+            </p>
+            <button
+              onClick={() => setLocation("/register")}
+              className="w-full py-2 px-4 border border-primary text-primary hover:bg-primary/5 font-medium rounded-lg transition-colors"
+            >
+              Criar minha conta grátis
+            </button>
+          </div>
 
           {/* Informações adicionais */}
           <div className="mt-6 text-center">

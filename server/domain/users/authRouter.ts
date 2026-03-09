@@ -13,6 +13,7 @@ export const authRouter = router({
         password: z.string().min(8),
         name: z.string().min(2),
         role: z.enum(["admin", "professor", "student"]).default("student"),
+        additionalData: z.any().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -20,7 +21,7 @@ export const authRouter = router({
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
-          message: "Email already registered",
+          message: "Este e-mail já está cadastrado.",
         });
       }
 
@@ -30,6 +31,7 @@ export const authRouter = router({
         password: hashedPassword,
         name: input.name,
         role: input.role === "student" ? "user" : input.role,
+        additionalData: input.additionalData,
       });
 
       if (!user) {
@@ -96,6 +98,20 @@ export const authRouter = router({
     clearAuthCookie(ctx.res);
     return { success: true };
   }),
+
+  forgotPassword: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const user = await db.getUserByEmail(input.email);
+      // Por segurança, não informamos se o e-mail existe ou não
+      if (!user) return { success: true };
+
+      // TODO: Integrar com serviço de e-mail (SendGrid/Resend)
+      // Por enquanto, apenas registramos a intenção
+      console.log(`Solicitação de recuperação de senha para: ${input.email}`);
+      
+      return { success: true };
+    }),
 
   me: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.user) {

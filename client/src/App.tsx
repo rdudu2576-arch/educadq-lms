@@ -40,7 +40,7 @@ import ProfessionalRegistration from "./pages/ProfessionalRegistration";
 import Courses from "./pages/Courses";
 import Forbidden403Page from "./pages/Forbidden403Page";
 import MercadoPagoCheckoutPage from "./pages/MercadoPagoCheckoutPage";
-import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import { FreeCoursesPage } from "./pages/FreeCoursesPage";
 import MonitorPage from "./pages/MonitorPage";
 // import { ResetPasswordPage } from "./pages/ResetPasswordPage"; // TODO: Fix tRPC type issue

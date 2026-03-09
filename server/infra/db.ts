@@ -108,17 +108,35 @@ export async function createUser(data: {
   password: string;
   name: string;
   role: "admin" | "professor" | "user";
+  additionalData?: any;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not connected");
   const openId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  const result = await db.insert(users).values({
+  
+  const values: any = {
     email: data.email,
     password: data.password,
     name: data.name,
     role: data.role,
     openId: openId,
-  }).returning();
+  };
+
+  if (data.additionalData) {
+    values.cpf = data.additionalData.cpf;
+    values.phone = data.additionalData.phone;
+    values.address = data.additionalData.address;
+    values.city = data.additionalData.city;
+    values.state = data.additionalData.state;
+    values.zip = data.additionalData.cep;
+    values.rg = data.additionalData.rg;
+    values.age = parseInt(data.additionalData.age);
+    values.neighborhood = data.additionalData.neighborhood;
+    values.complement = data.additionalData.complement;
+    values.number = data.additionalData.number;
+  }
+
+  const result = await db.insert(users).values(values).returning();
   return result[0];
 }
 
