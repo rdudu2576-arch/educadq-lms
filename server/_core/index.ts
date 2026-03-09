@@ -96,6 +96,9 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
+      onError: ({ error, path }) => {
+        console.error(`[tRPC] Error in ${path}:`, error);
+      },
     })
   );
 
