@@ -9,7 +9,7 @@ import {
   getPaymentsByStudent,
   getDb,
 } from "./db.js";
-import { users, enrollments, payments } from "../../infra/schema.js";
+import { users, enrollments, payments } from "../infra/schema.js";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 

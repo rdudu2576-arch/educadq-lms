@@ -6,7 +6,7 @@ import {
   pageContent,
   studentProfiles,
   payments,
-} from "../../infra/schema.js";
+} from "../infra/schema.js";
 
 export async function updateCourse(
   courseId: number,

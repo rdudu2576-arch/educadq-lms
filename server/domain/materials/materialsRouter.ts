@@ -1,6 +1,6 @@
 import { publicProcedure, protectedProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { lessonMaterials } from "../../../infra/schema.js";
+import { lessonMaterials } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 import { getDb } from "../../infra/db.js";
 

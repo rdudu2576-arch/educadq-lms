@@ -1,5 +1,5 @@
 import { getDb } from "../infra/db.js";
-import { systemLogs } from "../../infra/schema.js";
+import { systemLogs } from "../infra/schema.js";
 import { eventBus } from "./eventBus.js";
 
 export interface LogEventData {

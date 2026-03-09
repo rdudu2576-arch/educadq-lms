@@ -1,6 +1,6 @@
 import { publicProcedure, protectedProcedure, adminProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { dynamicContent } from "../../../infra/schema.js";
+import { dynamicContent } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 import { getDb } from "../../infra/db.js";
 

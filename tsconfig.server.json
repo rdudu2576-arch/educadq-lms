@@ -1,13 +1,25 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "outDir": "dist",
-    "rootDir": ".",
+    "outDir": "dist/server",
+    "rootDir": "server",
     "noImplicitAny": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "allowJs": true,
+    "checkJs": false,
+    "lib": ["ES2020"]
   },
   "include": ["server/**/*"],
   "exclude": ["node_modules", "dist", "client/**/*"]

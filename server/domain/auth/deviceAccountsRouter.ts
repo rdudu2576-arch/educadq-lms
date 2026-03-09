@@ -2,7 +2,7 @@ import { router, protectedProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import { getDb } from "../../infra/db.js";
 import { TRPCError } from "@trpc/server";
-import { deviceAccounts } from "../../../infra/schema.js";
+import { deviceAccounts } from "../../infra/schema.js";
 import { eq, and } from "drizzle-orm";
 
 export const deviceAccountsRouter = router({

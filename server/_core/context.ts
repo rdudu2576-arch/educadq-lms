@@ -1,5 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-import type { User } from "../../infra/schema.js";
+import type { User } from "../infra/schema.js";
 import { verifyToken, getUserById } from "../services/auth.service.js";
 
 export type TrpcContext = {

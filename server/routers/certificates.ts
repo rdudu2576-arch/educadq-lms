@@ -3,7 +3,7 @@ import { router, protectedProcedure, publicProcedure } from "../_core/trpc.js";
 import { generateCertificatePDF, generateCertificateFilename } from "../services/certificateService.js";
 import { storagePut, storageGet } from "../services/storageService.js";
 import { getDb } from "../infra/db.js";
-import { users, courses } from "../../infra/schema.js";
+import { users, courses } from "../infra/schema.js";
 import { eq } from "drizzle-orm";
 
 export const certificatesRouter = router({

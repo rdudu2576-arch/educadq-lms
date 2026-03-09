@@ -2,7 +2,7 @@ import { router, publicProcedure, protectedProcedure } from "../../_core/trpc.js
 import { z } from "zod";
 import { getDb } from "../../infra/db.js";
 import { TRPCError } from "@trpc/server";
-import { passwordResetTokens, users } from "../../../infra/schema.js";
+import { passwordResetTokens, users } from "../../infra/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
