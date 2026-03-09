@@ -1,5 +1,6 @@
 import { eq, and, desc, asc, gte, lte, inArray, isNotNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import {
   InsertUser,
@@ -25,15 +26,18 @@ import {
   fraudDetection,
   integrityChecks,
   pageContent,
-} from "../../drizzle/schema";
+} from "./schema";
 import { ENV } from "../_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: mysql.Pool | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      _pool = mysql.createPool(process.env.DATABASE_URL);
+      _db = drizzle(_pool);
+      console.log("[Database] Persistent connection pool initialized");
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
