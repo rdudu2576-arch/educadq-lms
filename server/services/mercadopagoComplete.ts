@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Preference, Payment } from "mercadopago";
+import MercadoPagoConfig from "mercadopago";
 
 /**
  * MercadoPago Complete Payment Service
