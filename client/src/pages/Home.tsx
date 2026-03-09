@@ -127,13 +127,25 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800">
         <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white leading-tight">EducaDQ</h1>
-              <p className="text-[10px] text-slate-500 leading-tight">Plataforma EAD</p>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation("/")}>
+            <img 
+              src="/assets/LOGOMARCA EDUCADQ P FUNDO ESCURO C TURQUESA.png" 
+              alt="EducaDQ Logo" 
+              className="h-10 w-auto object-contain"
+              onError={(e) => {
+                // Fallback if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.querySelector('.logo-fallback')?.classList.remove('hidden');
+              }}
+            />
+            <div className="logo-fallback hidden flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center">
+                <GraduationCap className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white leading-tight">EducaDQ</h1>
+                <p className="text-[10px] text-slate-500 leading-tight">Plataforma EAD</p>
+              </div>
             </div>
           </div>
 
