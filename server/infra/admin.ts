@@ -78,6 +78,7 @@ export const adminRouter = router({
       z.object({
         name: z.string().min(1),
         email: z.string().email(),
+        password: z.string().min(6).optional(),
         role: z.enum(["admin", "professor", "user"]),
       })
     )
@@ -86,24 +87,95 @@ export const adminRouter = router({
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash("TempPassword123!", 10);
+        // Check if user exists
+        const existing = await db.select().from(users).where(eq(users.email, input.email)).limit(1);
+        if (existing.length > 0) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "E-mail já cadastrado" });
+        }
+
+        // Hash password (use provided or default)
+        const passwordToHash = input.password || Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(passwordToHash, 10);
 
         // Insert user
-        const result = await db.insert(users).values({
+        await db.insert(users).values({
           openId: `${input.email}-${Date.now()}`,
           name: input.name,
           email: input.email,
           password: hashedPassword,
           role: input.role,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         });
 
-        return { success: true, message: "Usuário criado com sucesso" };
-      } catch (error) {
+        return { 
+          success: true, 
+          message: "Usuário criado com sucesso",
+          tempPassword: input.password ? undefined : passwordToHash 
+        };
+      } catch (error: any) {
         console.error("Error creating user:", error);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao criar usuário" });
+        throw new TRPCError({ 
+          code: error instanceof TRPCError ? error.code : "INTERNAL_SERVER_ERROR", 
+          message: error.message || "Erro ao criar usuário" 
+        });
+      }
+    }),
+
+  // Update user
+  updateUser: adminProcedure
+    .input(
+      z.object({
+        userId: z.number(),
+        name: z.string().optional(),
+        email: z.string().email().optional(),
+        role: z.enum(["admin", "professor", "user"]).optional(),
+        password: z.string().min(6).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
+
+        const updateData: any = { updatedAt: new Date() };
+        if (input.name) updateData.name = input.name;
+        if (input.email) updateData.email = input.email;
+        if (input.role) updateData.role = input.role;
+        if (input.password) {
+          updateData.password = await bcrypt.hash(input.password, 10);
+        }
+
+        await db.update(users).set(updateData).where(eq(users.id, input.userId));
+
+        return { success: true, message: "Usuário atualizado com sucesso" };
+      } catch (error) {
+        console.error("Error updating user:", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao atualizar usuário" });
+      }
+    }),
+
+  // Reset password
+  resetPassword: adminProcedure
+    .input(z.object({ userId: z.number() }))
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
+
+        const newPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await db.update(users)
+          .set({ password: hashedPassword, updatedAt: new Date() })
+          .where(eq(users.id, input.userId));
+
+        return { 
+          success: true, 
+          message: "Senha redefinida com sucesso", 
+          newPassword 
+        };
+      } catch (error) {
+        console.error("Error resetting password:", error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao redefinir senha" });
       }
     }),
 
