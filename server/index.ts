@@ -72,6 +72,17 @@ app.post("/webhook/mercadopago", async (req, res) => {
   }
 });
 
+// Servir arquivos estáticos do frontend (dist/public) ANTES da API
+const distPublicPath = path.resolve(__dirname, "..", "dist", "public");
+
+if (fs.existsSync(distPublicPath)) {
+  console.log(`[Static] Serving static files from: ${distPublicPath}`);
+  app.use(express.static(distPublicPath, { maxAge: "1d" }));
+} else {
+  console.warn(`[Static] Build directory not found at ${distPublicPath}`);
+  console.warn("[Static] Please run: npm run build");
+}
+
 // tRPC API
 app.use(
   "/api/trpc",
@@ -83,17 +94,6 @@ app.use(
     },
   }),
 );
-
-// Servir arquivos estáticos do frontend (dist/public)
-const distPublicPath = path.resolve(__dirname, "..", "dist", "public");
-
-if (fs.existsSync(distPublicPath)) {
-  console.log(`[Static] Serving static files from: ${distPublicPath}`);
-  app.use(express.static(distPublicPath, { maxAge: "1d" }));
-} else {
-  console.warn(`[Static] Build directory not found at ${distPublicPath}`);
-  console.warn("[Static] Please run: npm run build");
-}
 
 // SPA fallback - servir index.html para rotas não encontradas
 const indexPath = path.resolve(distPublicPath, "index.html");
