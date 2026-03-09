@@ -1,4 +1,4 @@
-import { router, publicProcedure, protectedProcedure } from "../../_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import {
   sendWelcomeEmail,
@@ -9,7 +9,7 @@ import {
   sendNewLessonEmail,
   sendPasswordResetEmail,
   sendAdminNewSaleEmail,
-} from "../../services/emailNotifications";
+} from "../../services/emailNotifications.js";
 
 export const notificationRouter = router({
   /**

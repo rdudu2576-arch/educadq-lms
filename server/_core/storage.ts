@@ -3,7 +3,7 @@
  * Handles file uploads to cloud storage
  */
 
-import { invokeLLM } from "./llm";
+import { invokeLLM } from "./llm.js";
 
 export interface StorageResult {
   url: string;

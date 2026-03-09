@@ -1,12 +1,12 @@
-import { router, publicProcedure, protectedProcedure } from "../../_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
-import { getDb } from "../../infra/db";
+import { getDb } from "../../infra/db.js";
 import { TRPCError } from "@trpc/server";
-import { passwordResetTokens, users } from "../../../drizzle/schema";
+import { passwordResetTokens, users } from "../../../infra/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
-import { sendPasswordResetEmail } from "../../services/emailNotifications";
+import { sendPasswordResetEmail } from "../../services/emailNotifications.js";
 
 export const passwordResetRouter = router({
   // Request password reset

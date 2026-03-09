@@ -1,6 +1,6 @@
-import { router, publicProcedure, protectedProcedure } from "../../_core/trpc";
-import { getDb } from "../../infra/db";
-import { studentProfiles } from "../../infra/schema";
+import { router, publicProcedure, protectedProcedure } from "../../_core/trpc.js";
+import { getDb } from "../../infra/db.js";
+import { studentProfiles } from "../../infra/schema.js";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { eq, and } from "drizzle-orm";

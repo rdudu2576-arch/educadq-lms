@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { appRouter } from "../../routers";
-import type { TrpcContext } from "../../_core/context";
-import * as db from "../../infra/db";
-import * as mp from "./mercadopago";
+import { appRouter } from "../../routers/index.js";
+import type { TrpcContext } from "../../_core/context.js";
+import * as db from "../../infra/db.js";
+import * as mp from "./mercadopago.js";
 
 vi.mock("../../infra/db", () => ({
   updatePayment: vi.fn(),

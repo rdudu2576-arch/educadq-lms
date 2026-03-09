@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { testMercadoPagoConnection } from "./mercadopago";
+import { testMercadoPagoConnection } from "./mercadopago.js";
 
 // Mock fetch
 global.fetch = vi.fn();

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { appRouter } from "../../routers";
-import type { TrpcContext } from "../../_core/context";
-import * as db from "../../infra/db";
+import { appRouter } from "../../routers/index.js";
+import type { TrpcContext } from "../../_core/context.js";
+import * as db from "../../infra/db.js";
 
 // Mock the database
 vi.mock("../../infra/db", () => ({

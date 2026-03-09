@@ -1,11 +1,11 @@
-import { protectedProcedure, publicProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../../_core/trpc.js";
 import {
   getPageContent,
   getPageContentByKey,
   updatePageContent,
   deletePageContent,
   getAllPageContent,
-} from "../../infra/db";
+} from "../../infra/db.js";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 

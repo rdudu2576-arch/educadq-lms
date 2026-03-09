@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
-import { awardPoints, checkAndAwardAchievement, getUserLevel, getLevelProgress, ACHIEVEMENTS } from "../services/gamificationService";
-import { getDb } from "../infra/db";
-import { users } from "../../drizzle/schema";
+import { router, protectedProcedure, publicProcedure } from "../_core/trpc.js";
+import { awardPoints, checkAndAwardAchievement, getUserLevel, getLevelProgress, ACHIEVEMENTS } from "../services/gamificationService.js";
+import { getDb } from "../infra/db.js";
+import { users } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 
 export const gamificationRouter = router({

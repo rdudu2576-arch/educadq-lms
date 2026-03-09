@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { adminProcedure, router } from "../_core/trpc";
+import { adminProcedure, router } from "../_core/trpc.js";
 import { TRPCError } from "@trpc/server";
 import {
   getCourses,
@@ -8,8 +8,8 @@ import {
   getOverduePayments,
   getPaymentsByStudent,
   getDb,
-} from "./db";
-import { users, enrollments, payments } from "../../drizzle/schema";
+} from "./db.js";
+import { users, enrollments, payments } from "../../infra/schema.js";
 import { eq, and } from "drizzle-orm";
 import bcrypt from "bcrypt";
 

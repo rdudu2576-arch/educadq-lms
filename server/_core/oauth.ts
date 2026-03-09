@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
-import * as db from "../infra/db";
-import { generateToken } from "../services/auth.service";
+import * as db from "../infra/db.js";
+import { generateToken } from "../services/auth.service.js";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];

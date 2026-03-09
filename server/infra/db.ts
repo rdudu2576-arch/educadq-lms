@@ -26,8 +26,8 @@ import {
   fraudDetection,
   integrityChecks,
   pageContent,
-} from "./schema";
-import { ENV } from "../_core/env";
+} from "./schema.js";
+import { ENV } from "../_core/env.js";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 let _pool: mysql.Pool | null = null;

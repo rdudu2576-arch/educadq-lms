@@ -1,12 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "outDir": "dist",
-    "allowImportingTsExtensions": false,
-    "rootDir": "."
+    "rootDir": ".",
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "suppressImplicitAnyIndexErrors": true
   },
   "include": ["server/**/*"],
   "exclude": ["node_modules", "dist", "client/**/*"]

@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc.js";
 import { z } from "zod";
-import { getDb } from "./db";
-import { notifications } from "../../drizzle/schema";
+import { getDb } from "./db.js";
+import { notifications } from "../../infra/schema.js";
 import { eq, and } from "drizzle-orm";
 
 export const notificationsRouter = router({

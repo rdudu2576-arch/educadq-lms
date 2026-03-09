@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, router } from "../../_core/trpc.js";
 import {
   createLesson,
   getLessonsByCourse,
@@ -16,7 +16,7 @@ import {
   getModulesByCourse,
   updateModule,
   deleteModule,
-} from "../../infra/db";
+} from "../../infra/db.js";
 import { z } from "zod";
 
 // ============================================================================

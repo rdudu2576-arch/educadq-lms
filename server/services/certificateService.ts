@@ -1,7 +1,7 @@
 import { PDFDocument, rgb, degrees } from "pdf-lib";
 import QRCode from "qrcode";
-import { getDb } from "../infra/db";
-import { users, courses } from "../../drizzle/schema";
+import { getDb } from "../infra/db.js";
+import { users, courses } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 
 /**

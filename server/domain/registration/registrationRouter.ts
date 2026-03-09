@@ -1,8 +1,8 @@
-import { router, publicProcedure, protectedProcedure, adminProcedure } from "../../_core/trpc";
+import { router, publicProcedure, protectedProcedure, adminProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
-import { getDb } from "../../infra/db";
+import { getDb } from "../../infra/db.js";
 import { TRPCError } from "@trpc/server";
-import { registrationFields, userRegistrationData } from "../../../drizzle/schema";
+import { registrationFields, userRegistrationData } from "../../../infra/schema.js";
 import { eq, asc } from "drizzle-orm";
 
 export const registrationRouter = router({

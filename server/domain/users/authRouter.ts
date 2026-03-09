@@ -1,9 +1,9 @@
-import { router, publicProcedure, protectedProcedure } from "../../_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { generateToken, setAuthCookie, clearAuthCookie } from "../../_core/jwt";
+import { generateToken, setAuthCookie, clearAuthCookie } from "../../_core/jwt.js";
 import { TRPCError } from "@trpc/server";
-import * as db from "../../infra/db";
+import * as db from "../../infra/db.js";
 
 export const authRouter = router({
   register: publicProcedure

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
-import { getCoursesByProfessor, getLessonsByCourse, getStudentLessonProgress } from "./db";
+import { protectedProcedure, router } from "../_core/trpc.js";
+import { getCoursesByProfessor, getLessonsByCourse, getStudentLessonProgress } from "./db.js";
 
 export const professorRouter = router({
   // Get courses assigned to professor

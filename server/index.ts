@@ -3,9 +3,13 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import cors from "cors";
-import { appRouter, createContext } from "./_core";
-import { loginRateLimiter, registerRateLimiter, apiRateLimiter } from "./middleware/loginRateLimiter";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { appRouter, createContext } from "./_core/index.js";
+import { loginRateLimiter, registerRateLimiter, apiRateLimiter } from "./middleware/loginRateLimiter.js";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
 // Trust proxy for rate limiting
@@ -26,7 +30,7 @@ app.use("/api/trpc", apiRateLimiter);
 app.post("/api/lessons", async (req, res) => {
   try {
     const { moduleId, title, type, content, videoUrl, liveUrl, order } = req.body;
-    const { createLesson } = await import("./infra/db");
+    const { createLesson } = await import("./infra/db.js");
     
     if (!moduleId || !title) {
       return res.status(400).json({ error: "moduleId and title are required" });
@@ -54,7 +58,7 @@ app.post("/webhook/mercadopago", async (req, res) => {
   try {
     const payment = req.body;
     if (payment?.status === "approved" && payment?.user_id && payment?.course_id) {
-      const { enrollStudent, updatePayment } = await import("./infra/db");
+      const { enrollStudent, updatePayment } = await import("./infra/db.js");
       await enrollStudent(payment.user_id, payment.course_id);
       if (payment.payment_id) {
         await updatePayment(payment.payment_id, { status: "paid", paidAt: new Date() });
@@ -80,8 +84,31 @@ app.use(
   }),
 );
 
+// Servir arquivos estáticos do frontend (dist/public)
+const distPublicPath = path.resolve(__dirname, "..", "dist", "public");
+
+if (fs.existsSync(distPublicPath)) {
+  console.log(`[Static] Serving static files from: ${distPublicPath}`);
+  app.use(express.static(distPublicPath, { maxAge: "1d" }));
+} else {
+  console.warn(`[Static] Build directory not found at ${distPublicPath}`);
+  console.warn("[Static] Please run: npm run build");
+}
+
+// SPA fallback - servir index.html para rotas não encontradas
+const indexPath = path.resolve(distPublicPath, "index.html");
+app.get("*", (req, res) => {
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send("Build files not found. Please run: npm run build");
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+  console.log(`[Server] Listening on port ${PORT}`);
+  console.log(`[Server] Frontend: http://localhost:${PORT}`);
+  console.log(`[Server] API: http://localhost:${PORT}/api/trpc`);
 });

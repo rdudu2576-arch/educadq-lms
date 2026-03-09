@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import * as db from "../../infra/db";
+import * as db from "../../infra/db.js";
 
 export const articlesRouter = router({
   list: publicProcedure.query(async () => {

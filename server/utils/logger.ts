@@ -1,6 +1,6 @@
-import { getDb } from "../infra/db";
-import { systemLogs } from "../../drizzle/schema";
-import { eventBus } from "./eventBus";
+import { getDb } from "../infra/db.js";
+import { systemLogs } from "../../infra/schema.js";
+import { eventBus } from "./eventBus.js";
 
 export interface LogEventData {
   level: "info" | "warning" | "error" | "security";

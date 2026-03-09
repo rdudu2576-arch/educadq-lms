@@ -2,9 +2,9 @@
  * Course Recommendation Service
  */
 
-import { getDb } from "../infra/db";
+import { getDb } from "../infra/db.js";
 import { eq, and, not, inArray } from "drizzle-orm";
-import { courses, enrollments, lessonProgress } from "../../drizzle/schema";
+import { courses, enrollments, lessonProgress } from "../../infra/schema.js";
 
 interface RecommendedCourse {
   id: number;

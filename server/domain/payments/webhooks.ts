@@ -1,7 +1,7 @@
-import { publicProcedure, router } from "../../_core/trpc";
+import { publicProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { getMercadoPagoPayment } from "./mercadopago";
-import { updatePayment, enrollStudent, getPaymentsByStudent } from "../../infra/db";
+import { getMercadoPagoPayment } from "./mercadopago.js";
+import { updatePayment, enrollStudent, getPaymentsByStudent } from "../../infra/db.js";
 import { TRPCError } from "@trpc/server";
 
 interface MercadoPagoWebhookPayload {

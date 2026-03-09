@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getCourses } from "./infra/db";
+import { getCourses } from "./infra/db.js";
 
 describe("Free Courses Filter", () => {
   it("should filter courses by price = 0", async () => {

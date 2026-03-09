@@ -1,8 +1,8 @@
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "../../_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { assessments, questions, questionOptions, studentAnswers } from "../../../drizzle/schema";
+import { assessments, questions, questionOptions, studentAnswers } from "../../../infra/schema.js";
 import { eq, and } from "drizzle-orm";
-import { getDb } from "../../infra/db";
+import { getDb } from "../../infra/db.js";
 
 export const assessmentsRouter = router({
   // Get assessments for a course

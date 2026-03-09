@@ -1,7 +1,7 @@
-import { router, protectedProcedure, adminProcedure } from "../../_core/trpc";
+import { router, protectedProcedure, adminProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import * as db from "../../infra/db";
+import * as db from "../../infra/db.js";
 
 export const courseUpdateRouter = router({
   update: adminProcedure

@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
-import { getDb } from "../infra/db";
-import { users, courses, enrollments, payments, assessments } from "../../drizzle/schema";
+import { getDb } from "../infra/db.js";
+import { users, courses, enrollments, payments, assessments } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 
 /**

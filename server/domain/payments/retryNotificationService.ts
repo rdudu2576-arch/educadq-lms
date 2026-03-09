@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
-import * as db from "../../infra/db";
-import { notifyOwner } from "../../_core/notification";
+import * as db from "../../infra/db.js";
+import { notifyOwner } from "../../_core/notification.js";
 
 export interface NotificationChannels {
   email: boolean;

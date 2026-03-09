@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { adminRouter } from "../infra/admin";
-import type { TrpcContext } from "../_core/context";
+import { adminRouter } from "../infra/admin.js";
+import type { TrpcContext } from "../_core/context.js";
 
 // Mock database functions
 vi.mock("../infra/db", () => ({

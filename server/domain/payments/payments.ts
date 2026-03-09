@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, router } from "../../_core/trpc.js";
 import {
   createPayment,
   getPaymentsByStudent,
@@ -9,7 +9,7 @@ import {
   getOverduePayments,
   getCourseById,
   enrollStudent,
-} from "../../infra/db";
+} from "../../infra/db.js";
 import { z } from "zod";
 
 export const paymentsRouter = router({

@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, publicProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { loginUser, registerUser } from "../../services/auth.service";
+import { loginUser, registerUser } from "../../services/auth.service.js";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -142,7 +142,7 @@ export const authRouter = router({
 
       try {
         // Import db functions
-        const { updateUserProfile } = await import("../../infra/db");
+        const { updateUserProfile } = await import("../../infra/db.js");
         const updated = await updateUserProfile(ctx.user.id, input);
 
         return {
@@ -172,7 +172,7 @@ export const authRouter = router({
       }
 
       try {
-        const { getUserById } = await import("../../services/auth.service");
+        const { getUserById } = await import("../../services/auth.service.js");
         const user = await getUserById(input.userId);
 
         if (!user) {
@@ -219,7 +219,7 @@ export const authRouter = router({
       }
 
       try {
-        const { updateUserRole } = await import("../../infra/db");
+        const { updateUserRole } = await import("../../infra/db.js");
         const updated = await updateUserRole(input.userId, input.role);
 
         return {

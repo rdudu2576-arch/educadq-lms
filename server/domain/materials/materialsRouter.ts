@@ -1,8 +1,8 @@
-import { publicProcedure, protectedProcedure, router } from "../../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { lessonMaterials } from "../../../drizzle/schema";
+import { lessonMaterials } from "../../../infra/schema.js";
 import { eq } from "drizzle-orm";
-import { getDb } from "../../infra/db";
+import { getDb } from "../../infra/db.js";
 
 export const materialsRouter = router({
   // Get materials for a lesson

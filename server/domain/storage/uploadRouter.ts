@@ -1,7 +1,7 @@
-import { router, protectedProcedure, adminProcedure } from "../../_core/trpc";
+import { router, protectedProcedure, adminProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { storagePut } from "../../_core/storage";
+import { storagePut } from "../../_core/storage.js";
 import crypto from "crypto";
 
 export const uploadRouter = router({

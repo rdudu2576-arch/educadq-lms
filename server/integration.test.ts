@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { getDb, getUserByOpenId, upsertUser } from "./infra/db";
-import { appRouter } from "./routers";
+import { getDb, getUserByOpenId, upsertUser } from "./infra/db.js";
+import { appRouter } from "./routers/index.js";
 
 describe("Backend Integration Tests", () => {
   let db: any;

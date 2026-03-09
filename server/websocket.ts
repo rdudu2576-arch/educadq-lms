@@ -1,5 +1,5 @@
 import { WebSocketServer, WebSocket } from "ws";
-import { eventBus } from "./utils/eventBus";
+import { eventBus } from "./utils/eventBus.js";
 
 export function startWebSocket(server: any) {
   const wss = new WebSocketServer({ server });

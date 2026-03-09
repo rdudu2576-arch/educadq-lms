@@ -1,8 +1,8 @@
-import { publicProcedure, protectedProcedure, adminProcedure, router } from "../../_core/trpc";
+import { publicProcedure, protectedProcedure, adminProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { dynamicContent } from "../../../drizzle/schema";
+import { dynamicContent } from "../../../infra/schema.js";
 import { eq } from "drizzle-orm";
-import { getDb } from "../../infra/db";
+import { getDb } from "../../infra/db.js";
 
 export const contentRouter = router({
   // Get content by key (public)

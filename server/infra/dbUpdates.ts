@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "./db";
+import { getDb } from "./db.js";
 import {
   courses,
   articles,
   pageContent,
   studentProfiles,
   payments,
-} from "../../drizzle/schema";
+} from "../../infra/schema.js";
 
 export async function updateCourse(
   courseId: number,

@@ -1,4 +1,4 @@
-import { router, protectedProcedure } from "../../_core/trpc";
+import { router, protectedProcedure } from "../../_core/trpc.js";
 import { z } from "zod";
 import {
   createMercadoPagoCheckout,
@@ -7,7 +7,7 @@ import {
   createBoletoPayment,
   createTransferPayment,
   getPaymentStatus,
-} from "../../services/mercadopagoComplete";
+} from "../../services/mercadopagoComplete.js";
 
 export const mercadopagoRouter = router({
   /**

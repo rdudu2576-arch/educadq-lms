@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { router, protectedProcedure, publicProcedure } from "../_core/trpc";
-import { generateCertificatePDF, generateCertificateFilename } from "../services/certificateService";
-import { storagePut, storageGet } from "../services/storageService";
-import { getDb } from "../infra/db";
-import { users, courses } from "../../drizzle/schema";
+import { router, protectedProcedure, publicProcedure } from "../_core/trpc.js";
+import { generateCertificatePDF, generateCertificateFilename } from "../services/certificateService.js";
+import { storagePut, storageGet } from "../services/storageService.js";
+import { getDb } from "../infra/db.js";
+import { users, courses } from "../../infra/schema.js";
 import { eq } from "drizzle-orm";
 
 export const certificatesRouter = router({

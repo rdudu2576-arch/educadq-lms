@@ -1,29 +1,29 @@
 import "dotenv/config";
-import { router } from "./trpc";
-import { authRouter } from "../domain/users/auth";
-import { coursesRouter } from "../domain/courses/courses";
-import { lessonsRouter } from "../domain/courses/lessons";
-import { progressRouter } from "../domain/courses/progress";
-import { paymentsRouter } from "../domain/payments/payments";
-import { assessmentsRouter } from "../domain/courses/assessments";
-import { adminRouter } from "../infra/admin";
-import { professorRouter } from "../infra/professor";
-import { notificationsRouter } from "../infra/notifications";
-import { articlesRouter } from "../domain/articles/articles";
-import { rankingRouter } from "../domain/professionals/ranking";
-import { webhooksRouter } from "../domain/payments/webhooks";
-import { reportsRouter } from "../routers/reports";
-import { certificatesRouter } from "../routers/certificates";
-import { gamificationRouter } from "../routers/gamification";
-import { pageContentRouter } from "../domain/articles/pageContent";
-import { professionalsRouter } from "../domain/professionals/professionals";
-import { mercadopagoRouter } from "../domain/payments/mercadopagoRouter";
-import { registrationRouter } from "../domain/registration/registrationRouter";
-import { deviceAccountsRouter } from "../domain/auth/deviceAccountsRouter";
-import { passwordResetRouter } from "../domain/auth/passwordResetRouter";
-import { materialsRouter } from "../domain/materials/materialsRouter";
-import { contentRouter } from "../domain/content/contentRouter";
-import { systemRouter } from "./systemRouter";
+import { router } from "./trpc.js";
+import { authRouter } from "../domain/users/auth.js";
+import { coursesRouter } from "../domain/courses/courses.js";
+import { lessonsRouter } from "../domain/courses/lessons.js";
+import { progressRouter } from "../domain/courses/progress.js";
+import { paymentsRouter } from "../domain/payments/payments.js";
+import { assessmentsRouter } from "../domain/courses/assessments.js";
+import { adminRouter } from "../infra/admin.js";
+import { professorRouter } from "../infra/professor.js";
+import { notificationsRouter } from "../infra/notifications.js";
+import { articlesRouter } from "../domain/articles/articles.js";
+import { rankingRouter } from "../domain/professionals/ranking.js";
+import { webhooksRouter } from "../domain/payments/webhooks.js";
+import { reportsRouter } from "../routers/reports.js";
+import { certificatesRouter } from "../routers/certificates.js";
+import { gamificationRouter } from "../routers/gamification.js";
+import { pageContentRouter } from "../domain/articles/pageContent.js";
+import { professionalsRouter } from "../domain/professionals/professionals.js";
+import { mercadopagoRouter } from "../domain/payments/mercadopagoRouter.js";
+import { registrationRouter } from "../domain/registration/registrationRouter.js";
+import { deviceAccountsRouter } from "../domain/auth/deviceAccountsRouter.js";
+import { passwordResetRouter } from "../domain/auth/passwordResetRouter.js";
+import { materialsRouter } from "../domain/materials/materialsRouter.js";
+import { contentRouter } from "../domain/content/contentRouter.js";
+import { systemRouter } from "./systemRouter.js";
 
 export const appRouter = router({
   system: systemRouter,
@@ -54,4 +54,4 @@ export const appRouter = router({
 
 export type AppRouter = typeof appRouter;
 
-export { createContext } from './context';
+export { createContext } from './context.js';

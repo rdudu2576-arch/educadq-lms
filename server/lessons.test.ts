@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { createLesson, createModule, getModulesByCourse } from './infra/db';
+import { createLesson, createModule, getModulesByCourse } from './infra/db.js';
 
 describe('Lesson Creation', () => {
   let courseId = 60001;

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../../_core/trpc";
+import { protectedProcedure, router } from "../../_core/trpc.js";
 import {
   recordLessonProgress,
   getStudentLessonProgress,
@@ -14,7 +14,7 @@ import {
   getOptionsByQuestion,
   createCertificate,
   getCertificateByCourse,
-} from "../../infra/db";
+} from "../../infra/db.js";
 import { z } from "zod";
 
 // Generate unique certificate number

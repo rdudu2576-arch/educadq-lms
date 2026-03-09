@@ -1,10 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { adminProcedure, router } from "../_core/trpc";
+import { adminProcedure, router } from "../_core/trpc.js";
 import {
   generateCoursesReport,
   generateStudentsReport,
   generatePaymentsReport,
-} from "../services/reportService";
+} from "../services/reportService.js";
 
 export const reportsRouter = router({
   /**
