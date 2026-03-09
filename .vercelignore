@@ -1,0 +1,5 @@
+# Vercel ignores
+node_modules
+.git
+.env.local
+.env.*.local
