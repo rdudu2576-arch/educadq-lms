@@ -5,13 +5,7 @@
   "env": {
     "NODE_ENV": "production"
   },
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs20.x@20",
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
+
   "routes": [
     {
       "src": "/(.*)",
