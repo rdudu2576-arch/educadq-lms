@@ -1,12 +1,9 @@
 {
-  "$schema": "https://railway.app/railway.schema.json",
-  "build": {
-    "builder": {
-    "buildCommand": "pnpm install && pnpm vite build && pnpm tsc -p tsconfig.server.json"
-  },
-  "deploy": {
-    "startCommand": "node dist/server/index.js",
-    "restartPolicyType": "on_failure",
-    "restartPolicyMaxRetries": 5
-  }
+ "$schema": "https://railway.app/railway.schema.json",
+ "build": {
+  "buildCommand": "pnpm install && pnpm run build"
+ },
+ "deploy": {
+  "startCommand": "node dist/server/index.js"
+ }
 }
