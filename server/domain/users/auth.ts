@@ -1,7 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure, publicProcedure, router } from "../../_core/trpc.js";
 import { z } from "zod";
-import { loginUser, registerUser } from "../../services/auth.service.js";
+import { loginUser } from "../../services/auth.service.js";
+import { createUser, getUserByEmail } from "../../infra/db.js";
+import { hashPassword, generateToken } from "../../services/auth.service.js";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
@@ -72,14 +74,63 @@ export const authRouter = router({
   register: publicProcedure
     .input(
       z.object({
-        email: z.string().email("Invalid email format"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        name: z.string().min(2, "Name must be at least 2 characters"),
+        email: z.string().email("E-mail inválido"),
+        password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
+        name: z.string().min(2, "Nome muito curto"),
+        cpf: z.string().optional(),
+        rg: z.string().optional(),
+        phone: z.string().optional(),
+        age: z.string().optional(),
+        cep: z.string().optional(),
+        address: z.string().optional(),
+        number: z.string().optional(),
+        complement: z.string().optional(),
+        neighborhood: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       try {
-        const { user, token } = await registerUser(input.email, input.password, input.name);
+        // Check if user already exists
+        const existing = await getUserByEmail(input.email);
+        if (existing) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Usuário com este e-mail já existe",
+          });
+        }
+
+        // Hash password
+        const hashedPassword = await hashPassword(input.password);
+
+        // Create user with all fields
+        const user = await createUser({
+          email: input.email,
+          password: hashedPassword,
+          name: input.name,
+          role: "user",
+          additionalData: {
+            cpf: input.cpf,
+            rg: input.rg,
+            phone: input.phone,
+            age: input.age,
+            address: input.address,
+            city: input.city,
+            state: input.state,
+            cep: input.cep,
+            neighborhood: input.neighborhood,
+            complement: input.complement,
+            number: input.number,
+          }
+        });
+
+        // Generate token
+        const token = generateToken({
+          id: user.id,
+          email: user.email!,
+          role: user.role as "admin" | "professor" | "user",
+        });
 
         // Set token in httpOnly cookie
         ctx.res.cookie("token", token, COOKIE_OPTIONS);
@@ -94,7 +145,8 @@ export const authRouter = router({
           },
         };
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Registration failed";
+        if (error instanceof TRPCError) throw error;
+        const message = error instanceof Error ? error.message : "Erro ao registrar usuário";
         throw new TRPCError({
           code: "BAD_REQUEST",
           message,
