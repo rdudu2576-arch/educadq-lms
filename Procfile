@@ -1,1 +1,1 @@
-web: node server-simple.js
+web: pnpm start
