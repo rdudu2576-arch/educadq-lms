@@ -170,6 +170,33 @@ export const authRouter = router({
   }),
 
   /**
+   * Request password reset
+   */
+  forgotPassword: publicProcedure
+    .input(z.object({ email: z.string().email("E-mail inválido") }))
+    .mutation(async ({ input }) => {
+      try {
+        const { getUserByEmail } = await import("../../infra/db.js");
+        const user = await getUserByEmail(input.email);
+        
+        // Always return success for security reasons (don't reveal if email exists)
+        if (!user) {
+          return { success: true, message: "Se o e-mail estiver cadastrado, as instruções foram enviadas." };
+        }
+
+        // TODO: Integrate with email service (SendGrid, Mailtrap, etc.)
+        console.log(`[Auth] Solicitação de recuperação de senha para: ${input.email}`);
+        
+        return { success: true, message: "Se o e-mail estiver cadastrado, as instruções foram enviadas." };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao processar solicitação",
+        });
+      }
+    }),
+
+  /**
    * Update own profile
    */
   updateProfile: protectedProcedure
