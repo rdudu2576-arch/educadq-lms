@@ -20,5 +20,5 @@ RUN pnpm run build
 # Expose the port
 EXPOSE 3000
 
-# Start the server
-CMD ["pnpm", "start"]
+# Start the server directly with node to avoid pnpm issues in runtime
+CMD ["node", "dist/server/index.js"]
