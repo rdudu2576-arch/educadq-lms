@@ -1,13 +1,24 @@
 FROM node:20
 
+# Install pnpm
+RUN npm install -g pnpm
+
 WORKDIR /app
 
+# Copy dependency files
+COPY package.json pnpm-lock.yaml* ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Copy the rest of the application
 COPY . .
 
-RUN npm install --legacy-peer-deps
+# Build the project (Vite + Server)
+RUN pnpm run build
 
-RUN npm run build
-
+# Expose the port
 EXPOSE 3000
 
-CMD ["node", "dist/server/index.js"]
+# Start the server
+CMD ["pnpm", "start"]
