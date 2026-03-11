@@ -1,24 +1,21 @@
 FROM node:20
 
-# Install pnpm
-RUN npm install -g pnpm
-
 WORKDIR /app
 
-# Copy dependency files
+# Instala pnpm
+RUN npm install -g pnpm
+
+# Copia package.json e lockfile
 COPY package.json pnpm-lock.yaml* ./
 
-# Install dependencies
+# Instala dependências
 RUN pnpm install --no-frozen-lockfile
 
-# Copy the rest of the application
+# Copia todo o projeto
 COPY . .
 
-# Build the project (Vite + Server)
-RUN pnpm run build
+# Build completo do server
+RUN pnpm run build:server
 
-# Expose the port
-EXPOSE 3000
-
-# Start the server directly with node to avoid pnpm issues in runtime
-CMD ["node", "dist/server/index.js"]
+# Comando final de start
+CMD ["pnpm", "start"]
