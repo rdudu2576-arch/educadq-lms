@@ -18,6 +18,7 @@ export const authRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const existing = await db.getUserByEmail(input.email);
+
       if (existing) {
         throw new TRPCError({
           code: "CONFLICT",
@@ -26,30 +27,23 @@ export const authRouter = router({
       }
 
       const hashedPassword = await bcrypt.hash(input.password, 10);
+
       const user = await db.createUser({
         email: input.email,
         password: hashedPassword,
         name: input.name,
-        role: input.role === "student" ? "user" : input.role,
-        additionalData: input.additionalData,
+        role: input.role,
+        additionalData: input.additionalData ?? null,
       });
 
-      if (!user) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create user",
-        });
-      }
-
-      const token = generateToken({
-        userId: user.id,
-        email: user.email || "",
-        role: user.role as any,
-      });
+      const token = generateToken(user);
 
       setAuthCookie(ctx.res, token);
 
-      return { userId: user.id, email: user.email || "", role: user.role };
+      return {
+        success: true,
+        user,
+      };
     }),
 
   login: publicProcedure
@@ -61,114 +55,45 @@ export const authRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const user = await db.getUserByEmail(input.email);
+
       if (!user) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid credentials",
+          message: "Credenciais inválidas.",
         });
       }
 
-      if (!user.password) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Invalid credentials",
-        });
-      }
+      const validPassword = await bcrypt.compare(
+        input.password,
+        user.password
+      );
 
-      const validPassword = await bcrypt.compare(input.password, user.password);
       if (!validPassword) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "Invalid credentials",
+          message: "Credenciais inválidas.",
         });
       }
 
-      const token = generateToken({
-        userId: user.id,
-        email: user.email || "",
-        role: user.role as any,
-      });
+      const token = generateToken(user);
 
       setAuthCookie(ctx.res, token);
 
-      return { userId: user.id, email: user.email || "", role: user.role };
+      return {
+        success: true,
+        user,
+      };
     }),
 
-  logout: protectedProcedure.mutation(async ({ ctx }) => {
+  logout: publicProcedure.mutation(({ ctx }) => {
     clearAuthCookie(ctx.res);
-    return { success: true };
-  }),
-
-  forgotPassword: publicProcedure
-    .input(z.object({ email: z.string().email() }))
-    .mutation(async ({ input }) => {
-      const user = await db.getUserByEmail(input.email);
-      // Por segurança, não informamos se o e-mail existe ou não
-      if (!user) return { success: true };
-
-      // TODO: Integrar com serviço de e-mail (SendGrid/Resend)
-      // Por enquanto, apenas registramos a intenção
-      console.log(`Solicitação de recuperação de senha para: ${input.email}`);
-      
-      return { success: true };
-    }),
-
-  me: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.user) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "Not authenticated",
-      });
-    }
-
-    const user = await db.getUserById(ctx.user.id);
-    if (!user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
 
     return {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      success: true,
     };
   }),
 
-  updateProfile: protectedProcedure
-    .input(
-      z.object({
-        name: z.string().min(2).optional(),
-        bio: z.string().optional(),
-        avatar: z.string().optional(),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      if (!ctx.user) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Not authenticated",
-        });
-      }
-
-      const user = await db.updateUser(ctx.user.id, {
-        name: input.name,
-      });
-
-      if (!user) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "User not found",
-        });
-      }
-
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      };
-    }),
+  me: protectedProcedure.query(({ ctx }) => {
+    return ctx.user;
+  }),
 });
