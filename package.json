@@ -1,11 +1,9 @@
 {
-  "name": "educadq-ead",
-  "version": "1.0.1",
-  "license": "MIT",
-  "packageManager": "pnpm@10.4.1",
   "scripts": {
-    "dev": "NODE_ENV=development tsx watch server/index.ts",
-    "build": "vite build && tsc -p tsconfig.server.json || true",
-    "start": "npx tsx server/index.ts"
+    "dev": "tsx watch server/index.ts",
+    "build": "vite build",
+    "migrate": "ts-node prisma/migrate.ts", 
+    "prestart": "npm run migrate", 
+    "start": "node dist/server/index.js"
   }
 }
