@@ -10,7 +10,6 @@ function createAssessmentContext(): { ctx: TrpcContext } {
     openId: "test-user",
     email: "test@example.com",
     name: "Test User",
-    loginMethod: "manus",
     role: "user",
     createdAt: new Date(),
     updatedAt: new Date(),
