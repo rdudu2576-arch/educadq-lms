@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { getDb } from "../infra/db.js";
 import { users } from "../infra/schema.js";
-import { eq } from "drizzle-orm";
+import bcrypt from "bcryptjs";
 
 // ============================================================================
 // CONSTANTS
