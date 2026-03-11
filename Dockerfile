@@ -1,26 +1,23 @@
-# Imagem base Node
+# 1️⃣ Base image Node 20
 FROM node:20
 
-# Diretório de trabalho
+# 2️⃣ Diretório de trabalho
 WORKDIR /app
 
-# Instala pnpm globalmente
+# 3️⃣ Instalar pnpm globalmente
 RUN npm install -g pnpm
 
-# Copia package.json e lockfile
+# 4️⃣ Copiar arquivos de lock e package.json
 COPY package.json pnpm-lock.yaml* ./
 
-# Instala todas dependências
+# 5️⃣ Instalar dependências
 RUN pnpm install --no-frozen-lockfile
 
-# Instala tipos do Node para TS
-RUN pnpm add -D @types/node
-
-# Copia todo o restante do projeto
+# 6️⃣ Copiar todo o projeto
 COPY . .
 
-# Build do servidor
+# 7️⃣ Build do servidor (TypeScript)
 RUN pnpm run build:server
 
-# Comando padrão para start
-CMD ["node", "dist/server/index.js"]
+# 8️⃣ Rodar migrations e iniciar servidor
+CMD ["sh", "-c", "pnpm run migrate && node dist/server/index.js"]
