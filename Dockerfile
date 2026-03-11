@@ -1,26 +1,26 @@
-# 1️⃣ Imagem base Node
+# Imagem base Node
 FROM node:20
 
-# 2️⃣ Define diretório de trabalho
+# Diretório de trabalho
 WORKDIR /app
 
-# 3️⃣ Instala pnpm globalmente
+# Instala pnpm globalmente
 RUN npm install -g pnpm
 
-# 4️⃣ Copia package.json e pnpm-lock.yaml
+# Copia package.json e lockfile
 COPY package.json pnpm-lock.yaml* ./
 
-# 5️⃣ Instala dependências, incluindo devDependencies
+# Instala todas dependências
 RUN pnpm install --no-frozen-lockfile
 
-# 6️⃣ Instala @types/node para TS
+# Instala tipos do Node para TS
 RUN pnpm add -D @types/node
 
-# 7️⃣ Copia todo o restante do projeto
+# Copia todo o restante do projeto
 COPY . .
 
-# 8️⃣ Build do servidor
+# Build do servidor
 RUN pnpm run build:server
 
-# 9️⃣ Comando padrão de start
+# Comando padrão para start
 CMD ["node", "dist/server/index.js"]
