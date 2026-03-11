@@ -1,9 +1,27 @@
 {
+  "name": "educadq-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx watch server/index.ts",
-    "build": "vite build",
-    "migrate": "ts-node prisma/migrate.ts", 
-    "prestart": "npm run migrate", 
+    "build": "tsc && vite build",
+    "migrate": "ts-node prisma/migrate.ts",
+    "prestart": "npm run migrate",
     "start": "node dist/server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "prisma": "^5.1.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0",
+    "tsx": "^3.12.7"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
