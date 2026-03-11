@@ -1,16 +1,18 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/server",
+    "outDir": "./dist/server",
     "rootDir": ".",
     "module": "ESNext",
-    "target": "ESNext",
-    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": false,
+    "types": ["node"],
     "allowImportingTsExtensions": true,
-    "types": ["node", "vite/client"]
+    "resolveJsonModule": true,
+    "noEmit": false
   },
   "include": [
     "server/**/*",
