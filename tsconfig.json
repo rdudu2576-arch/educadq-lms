@@ -3,9 +3,23 @@
   "compilerOptions": {
     "outDir": "dist/server",
     "rootDir": ".",
-    "noEmit": false,
-    "moduleResolution": "node",
-    "types": ["node"]
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "allowImportingTsExtensions": true,
+    "types": ["node", "vite/client"]
   },
-  "include": ["server/**/*", "shared/**/*"]
+  "include": [
+    "server/**/*",
+    "shared/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "**/*.test.ts"
+  ]
 }
