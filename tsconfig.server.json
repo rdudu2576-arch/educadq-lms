@@ -1,11 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "rootDir": ".",
     "outDir": "dist/server",
-    "rootDir": "server",
     "noEmit": false,
-    "moduleResolution": "node",
-    "types": ["node"]
+    "allowImportingTsExtensions": false
   },
   "include": ["server/**/*", "shared/**/*"]
 }
