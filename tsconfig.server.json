@@ -1,24 +1,21 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "dist/server",
     "rootDir": "server",
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
+    "strict": false,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "allowJs": true,
-    "downlevelIteration": true,
-    "lib": ["ES2020"]
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
   "include": [
-    "server/**/*"
+    "server/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "client/**/*"
+    "server/**/*.test.ts",
+    "server/tests",
+    "node_modules"
   ]
 }
