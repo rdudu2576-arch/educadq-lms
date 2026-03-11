@@ -58,7 +58,7 @@ function createAdminContext(): TrpcContext {
       openId: "admin-user",
       email: "admin@educadq.com",
       name: "Admin User",
-      loginMethod: "manus",
+  
       role: "admin",
       createdAt: new Date(),
       updatedAt: new Date(),
