@@ -54,7 +54,6 @@ const adminUser: AuthenticatedUser = {
   zip: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  loginMethod: "manus",
   lastSignedIn: new Date(),
 };
 
@@ -72,7 +71,6 @@ const professorUser: AuthenticatedUser = {
   zip: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  loginMethod: "manus",
   lastSignedIn: new Date(),
 };
 
@@ -90,7 +88,6 @@ const studentUser: AuthenticatedUser = {
   zip: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  loginMethod: "manus",
   lastSignedIn: new Date(),
 };
 
