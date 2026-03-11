@@ -24,8 +24,6 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 app.use(cors());
 
-app.use("/api/trpc/auth.login", loginRateLimiter);
-app.use("/api/trpc/auth.register", registerRateLimiter);
 app.use("/api/trpc", apiRateLimiter);
 
 app.post("/api/lessons", async (req, res) => {
