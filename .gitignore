@@ -120,5 +120,4 @@ temp/
 *.txt
 !todo.md
 .env
-*.md
 .vercel
