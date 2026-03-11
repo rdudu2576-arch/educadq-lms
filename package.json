@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "main": "dist/server/index.js",
   "scripts": {
+    "start": "node dist/server/index.js",
+    "dev": "ts-node server/index.ts",
+    "build": "tsc && vite build",
     "build:server": "tsc --project tsconfig.server.json",
-    "build:client": "vite build",
-    "build": "pnpm run build:server && pnpm run build:client",
-    "migrate": "prisma migrate deploy",
-    "prestart": "pnpm run migrate && pnpm run build:server",
-    "start": "node dist/server/index.js"
+    "postinstall": "pnpm run build:server"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
@@ -16,6 +15,7 @@
     "prisma": "^5.22.0"
   },
   "devDependencies": {
+    "@types/node": "^20.5.1",
     "ts-node": "^10.9.2",
     "tsx": "^3.14.0",
     "typescript": "^5.9.3",
