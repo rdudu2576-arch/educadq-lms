@@ -11,7 +11,7 @@
     "test": "vitest"
   },
   "imports": {
-    "@shared/*": "./dist/server/shared/*"
+    "@shared/*": "./dist/server/shared/*.js"
   },
   "dependencies": {
     "@radix-ui/primitive": "^1.1.3",
