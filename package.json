@@ -11,6 +11,7 @@
     "test": "vitest"
   },
   "imports": {
+    "@shared/*.js": "./dist/server/shared/*.js",
     "@shared/*": "./dist/server/shared/*.js"
   },
   "dependencies": {
