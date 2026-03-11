@@ -8,7 +8,6 @@
     "dev": "tsx server/index.ts",
     "build": "tsc && vite build",
     "build:server": "tsc --project tsconfig.server.json",
-    "postinstall": "pnpm run build:server",
     "test": "vitest"
   },
   "dependencies": {
