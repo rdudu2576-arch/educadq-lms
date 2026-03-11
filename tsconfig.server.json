@@ -4,7 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "outDir": "dist/server",
-    "rootDir": "server",
+    "rootDir": ".",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -14,8 +14,8 @@
     "server/**/*.ts"
   ],
   "exclude": [
+    "node_modules",
     "server/**/*.test.ts",
-    "server/tests",
-    "node_modules"
+    "server/tests"
   ]
 }
