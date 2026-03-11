@@ -1,0 +1,143 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { adminRouter } from "../infra/admin.js";
+import type { TrpcContext } from "../_core/context.js";
+
+// Mock database functions
+vi.mock("../infra/db", () => ({
+  getCourses: vi.fn().mockResolvedValue([
+    {
+      id: 1,
+      title: "Test Course",
+      description: "Test Description",
+      courseHours: 40,
+      price: "99.99",
+      minimumGrade: 70,
+      professorId: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]),
+  getCourseEnrollments: vi.fn().mockResolvedValue([
+    {
+      id: 1,
+      studentId: 1,
+      courseId: 1,
+      enrolledAt: new Date(),
+      completedAt: null,
+    },
+  ]),
+  getPaymentsByStudent: vi.fn().mockResolvedValue([
+    {
+      id: 1,
+      studentId: 1,
+      courseId: 1,
+      amount: "99.99",
+      status: "paid",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]),
+  getStudentEnrollments: vi.fn().mockResolvedValue([]),
+  getOverduePayments: vi.fn().mockResolvedValue([
+    {
+      id: 1,
+      studentId: 1,
+      courseId: 1,
+      amount: "35.00",
+      dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      status: "overdue",
+      createdAt: new Date(),
+    },
+  ]),
+}));
+
+function createAdminContext(): TrpcContext {
+  return {
+    user: {
+      id: 1,
+      openId: "admin-user",
+      email: "admin@educadq.com",
+      name: "Admin User",
+  
+      role: "admin",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    req: {
+      protocol: "https",
+      headers: {},
+    } as TrpcContext["req"],
+    res: {} as TrpcContext["res"],
+  };
+}
+
+describe("Admin Router", () => {
+  let ctx: TrpcContext;
+
+  beforeEach(() => {
+    ctx = createAdminContext();
+  });
+
+  it("should get dashboard statistics", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const stats = await caller.getStatistics();
+
+    expect(stats).toHaveProperty("totalCourses");
+    expect(stats).toHaveProperty("totalStudents");
+    expect(stats).toHaveProperty("totalRevenue");
+    expect(stats).toHaveProperty("overdueInstallments");
+    expect(stats.totalCourses).toBeGreaterThanOrEqual(0);
+    expect(stats.totalStudents).toBeGreaterThanOrEqual(0);
+  });
+
+  it("should get course enrollments report", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const report = await caller.getCourseEnrollmentsReport({ courseId: 1 });
+
+    expect(report).toHaveProperty("courseId");
+    expect(report).toHaveProperty("totalEnrollments");
+    expect(report).toHaveProperty("enrollments");
+    expect(report.courseId).toBe(1);
+  });
+
+  it("should get payment report", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const report = await caller.getPaymentReport();
+
+    expect(report).toHaveProperty("totalOverdue");
+    expect(report).toHaveProperty("overdueInstallments");
+    expect(Array.isArray(report.overdueInstallments)).toBe(true);
+  });
+
+  it("should unlock course for student", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const result = await caller.unlockCourse({
+      studentId: 1,
+      courseId: 1,
+    });
+
+    expect(result).toHaveProperty("success");
+    expect(result.success).toBe(true);
+  });
+
+  it("should send payment reminder", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const result = await caller.sendPaymentReminder({
+      installmentId: 1,
+    });
+
+    expect(result).toHaveProperty("success");
+    expect(result.success).toBe(true);
+  });
+
+  it("should generate Excel report", async () => {
+    const caller = adminRouter.createCaller(ctx);
+    const result = await caller.generateExcelReport({
+      reportType: "courses",
+    });
+
+    expect(result).toHaveProperty("success");
+    expect(result).toHaveProperty("url");
+    expect(result.success).toBe(true);
+  });
+});
