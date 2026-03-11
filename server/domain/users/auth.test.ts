@@ -43,7 +43,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
       const ctx = createAuthContext(user);
@@ -80,7 +80,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -98,7 +98,7 @@ describe("Auth Router", () => {
         zip: "01234-567",
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -144,7 +144,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -162,7 +162,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -198,7 +198,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -216,7 +216,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -249,7 +249,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -281,7 +281,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -299,7 +299,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -331,7 +331,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
@@ -360,7 +360,7 @@ describe("Auth Router", () => {
         zip: null,
         createdAt: new Date(),
         updatedAt: new Date(),
-        loginMethod: "manus",
+        
         lastSignedIn: new Date(),
       };
 
