@@ -12,7 +12,7 @@ export const authRouter = router({
         email: z.string().email(),
         password: z.string().min(8),
         name: z.string().min(2),
-        role: z.enum(["admin", "professor", "student"]).default("student"),
+       role: z.enum(["admin", "professor", "student"]).transform(r => r === "student" ? "user" : r)
         additionalData: z.any().optional(),
       })
     )
