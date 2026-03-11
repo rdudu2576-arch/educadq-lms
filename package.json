@@ -4,13 +4,18 @@
   "type": "module",
   "license": "MIT",
   "packageManager": "pnpm@10.4.1",
- "scripts": {
-  "dev": "NODE_ENV=development tsx watch server/index.ts",
-  "build": "vite build && tsc -p tsconfig.server.json || true",
-  "start": "NODE_ENV=production node dist/server/index.js",
-  "check": "tsc --noEmit",
-  "format": "prettier --write .",
-  "test": "vitest run"
+{
+  "name": "educadq-ead",
+  "version": "1.0.1",
+  "scripts": {
+    "dev": "NODE_ENV=development tsx watch server/index.ts",
+    "build": "vite build && tsc -p tsconfig.server.json || true",
+    "start": "NODE_ENV=production node dist/server/index.js",
+    "check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "test": "vitest run"
+  }
+}
 }
   },
   "dependencies": {
