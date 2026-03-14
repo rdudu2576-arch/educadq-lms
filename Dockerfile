@@ -3,14 +3,13 @@ FROM node:20
 
 WORKDIR /app
 
-# Copiar package.json primeiro para cache
-COPY package*.json ./
+RUN npm install -g pnpm
 
-RUN npm install
-
-# Copiar resto do projeto
+# Copiar tudo primeiro para o postinstall funcionar
 COPY . .
 
-RUN npm run build:server
+RUN pnpm install --no-frozen-lockfile
 
-CMD ["sh", "-c", "npm run migrate && node dist/server/index.js"]
+RUN pnpm run build:server
+
+CMD ["sh", "-c", "pnpm run migrate && node dist/server/index.js"]
