@@ -1,18 +1,14 @@
+# Base image Node 20
 FROM node:20
 
 WORKDIR /app
 
-# instalar pnpm corretamente
-RUN corepack enable
-RUN corepack prepare pnpm@latest --activate
+RUN npm install -g pnpm
 
-# copiar dependências primeiro (cache do docker)
-COPY package.json pnpm-lock.yaml* ./
-
-RUN pnpm install
-
-# copiar resto do projeto
+# Copiar tudo primeiro para o postinstall funcionar
 COPY . .
+
+RUN pnpm install --no-frozen-lockfile
 
 RUN pnpm run build:server
 
