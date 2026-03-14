@@ -1,0 +1,19 @@
+FROM node:20
+
+WORKDIR /app
+
+# instalar pnpm corretamente
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
+
+# copiar dependências primeiro (cache do docker)
+COPY package.json pnpm-lock.yaml* ./
+
+RUN pnpm install
+
+# copiar resto do projeto
+COPY . .
+
+RUN pnpm run build:server
+
+CMD ["sh", "-c", "pnpm run migrate && node dist/server/index.js"]
