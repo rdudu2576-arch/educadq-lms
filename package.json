@@ -5,8 +5,8 @@
   "type": "module",
   "main": "dist/server/server/index.js",
   "imports": {
-    "#shared/*.js": "./dist/shared/*.js",
-    "#shared/*": "./dist/shared/*.js"
+    "#shared/*.js": "./dist/server/shared/*.js",
+    "#shared/*": "./dist/server/shared/*.js"
   },
   "scripts": {
     "start": "node dist/server/server/index.js",
