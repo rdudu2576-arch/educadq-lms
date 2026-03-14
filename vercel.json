@@ -1,14 +1,19 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist/public",
+  "outputDirectory": "dist/client",
   "framework": "vite",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://educadq-lms-production.up.railway.app/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/trpc/(.*)",
+      "destination": "https://educadq-lms-production.up.railway.app/trpc/$1"
+    },
+    {
+      "source": "/(?!.*\\..*|_next).*",
       "destination": "/index.html"
     }
   ]
