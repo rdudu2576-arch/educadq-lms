@@ -31,8 +31,8 @@ export function extractTokenFromCookie(cookieHeader?: string): string | null {
   if (!cookieHeader) return null;
   const cookies = cookieHeader.split(";").map((c) => c.trim());
   for (const cookie of cookies) {
-    if (cookie.startsWith("auth_token=")) {
-      return cookie.substring("auth_token=".length);
+    if (cookie.startsWith("token=")) {
+      return cookie.substring("token=".length);
     }
   }
   return null;
@@ -45,13 +45,13 @@ export function setAuthCookie(
 ): void {
   res.setHeader(
     "Set-Cookie",
-    `auth_token=${token}; HttpOnly; Secure=${secure}; SameSite=Strict; Path=/; Max-Age=${7 * 24 * 60 * 60}`
+    `token=${token}; HttpOnly; Secure=${secure}; SameSite=None; Path=/; Max-Age=${7 * 24 * 60 * 60}`
   );
 }
 
 export function clearAuthCookie(res: any): void {
   res.setHeader(
     "Set-Cookie",
-    "auth_token=; HttpOnly; Secure=true; SameSite=Strict; Path=/; Max-Age=0"
+    "token=; HttpOnly; Secure=true; SameSite=None; Path=/; Max-Age=0"
   );
 }
