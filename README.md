@@ -407,3 +407,4 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](./LI
 
 Última atualização: Março de 2026  
 Versão: 1.0.0
+// Deploy com novas variáveis de ambiente

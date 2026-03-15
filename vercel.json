@@ -2,10 +2,15 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "framework": "vite",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://educadq-lms-production.up.railway.app/api/$1"
+    },
+    {
+      "source": "/trpc/(.*)",
+      "destination": "https://educadq-lms-production.up.railway.app/trpc/$1"
     },
     {
       "source": "/(.*)",

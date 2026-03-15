@@ -1,4 +1,4 @@
-# 1️⃣ Base image Node 20
+# Base image Node 20
 FROM node:20
 
 WORKDIR /app
