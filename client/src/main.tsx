@@ -10,13 +10,22 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
-const redirectToLoginIfUnauthorized = (error: unknown) => {
+const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
-
   if (!isUnauthorized) return;
+
+  // NÃO redirecionar se:
+  // 1. Já estiver na página de login ou registro
+  // 2. A query que falhou for a 'auth.me' (usada para verificar sessão silenciosamente)
+  const currentPath = window.location.pathname;
+  const isAuthMe = Array.isArray(queryKey) && queryKey.some(k => typeof k === 'string' && k.includes('auth.me'));
+  
+  if (currentPath === "/login" || currentPath === "/register" || isAuthMe) {
+    return;
+  }
 
   window.location.href = getLoginUrl();
 };
@@ -24,7 +33,8 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
+    const queryKey = event.query.queryKey;
+    redirectToLoginIfUnauthorized(error, queryKey);
     console.error("[API Query Error]", error);
   }
 });
