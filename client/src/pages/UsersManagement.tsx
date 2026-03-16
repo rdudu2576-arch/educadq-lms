@@ -4,93 +4,94 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { Trash2, Edit2, Plus, Search } from "lucide-react";
+import { Trash2, Edit2, Plus, Search, Loader2, Key, UserCheck } from "lucide-react";
 
 export default function UsersManagement() {
   const [selectedTab, setSelectedTab] = useState<"admin" | "professor" | "student">("student");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  const [isUserDialogOpen, setIsUserDialogOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [tempPassword, setTempPassword] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "user" as "admin" | "professor" | "user",
+    password: "",
   });
 
-  const { data: users = [], refetch } = trpc.admin.getUsers.useQuery({ limit: 1000, offset: 0 });
-  const utils = trpc.useUtils();
+  const { data: users = [], refetch, isLoading } = trpc.admin.getUsers.useQuery({ limit: 1000, offset: 0 });
   
-  // Filter users by role
-  const adminUsers = users.filter((u: any) => u.role === "admin");
-  const professorUsers = users.filter((u: any) => u.role === "professor");
-  const studentUsers = users.filter((u: any) => u.role === "user");
-
-  // Get current tab users
-  const currentUsers = {
-    admin: adminUsers,
-    professor: professorUsers,
-    student: studentUsers,
-  }[selectedTab];
-
-  // Filter by search query
-  const filteredUsers = currentUsers.filter((u: any) =>
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((u: any) => {
+    const roleMatch = selectedTab === "admin" ? u.role === "admin" : 
+                     selectedTab === "professor" ? u.role === "professor" : 
+                     u.role === "user";
+    const searchMatch = u.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                       u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    return roleMatch && searchMatch;
+  });
 
   const createUserMutation = trpc.admin.createUser.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast.success("Usuário criado com sucesso!");
+      if (data.tempPassword) {
+        setTempPassword(data.tempPassword);
+        setIsPasswordDialogOpen(true);
+      }
       resetForm();
       refetch();
     },
-    onError: (error: any) => toast.error(`Erro: ${error?.message || 'Erro desconhecido'}`),
+    onError: (error: any) => toast.error(`Erro: ${error?.message}`),
   });
 
-  const updateUserMutation = trpc.admin.updateUserRole.useMutation({
+  const updateUserMutation = trpc.admin.updateUser.useMutation({
     onSuccess: () => {
       toast.success("Usuário atualizado com sucesso!");
       resetForm();
       refetch();
-      utils.auth.me.invalidate();
     },
-    onError: (error: any) => toast.error(`Erro: ${error?.message || 'Erro desconhecido'}`),
+    onError: (error: any) => toast.error(`Erro: ${error?.message}`),
   });
 
-  const deleteUserMutation = trpc.admin.deleteUser.useMutation({
-    onSuccess: () => {
-      toast.success("Usuário deletado com sucesso!");
-      refetch();
+  const resetPasswordMutation = trpc.admin.resetPassword.useMutation({
+    onSuccess: (data) => {
+      setTempPassword(data.newPassword);
+      setIsPasswordDialogOpen(true);
+      toast.success("Senha redefinida!");
     },
-    onError: (error: any) => toast.error(`Erro: ${error?.message || 'Erro desconhecido'}`),
+    onError: (error: any) => toast.error(`Erro: ${error?.message}`),
   });
 
   const resetForm = () => {
-    setFormData({ name: "", email: "", role: "user" });
+    setFormData({ name: "", email: "", role: "user", password: "" });
     setEditingId(null);
-    setIsOpen(false);
+    setIsUserDialogOpen(false);
   };
 
   const handleSubmit = () => {
     if (!formData.name || !formData.email) {
-      toast.error("Preencha todos os campos");
+      toast.error("Nome e e-mail são obrigatórios");
       return;
     }
 
     if (editingId) {
       updateUserMutation.mutate({
         userId: editingId,
+        name: formData.name,
+        email: formData.email,
         role: formData.role,
+        password: formData.password || undefined,
       });
     } else {
       createUserMutation.mutate({
         name: formData.name,
         email: formData.email,
         role: formData.role,
+        password: formData.password || undefined,
       });
     }
   };
@@ -100,278 +101,113 @@ export default function UsersManagement() {
       name: user.name || "",
       email: user.email || "",
       role: user.role || "user",
+      password: "",
     });
     setEditingId(user.id);
-    setIsOpen(true);
-  };
-
-  const getRoleLabel = (role: string) => {
-    const labels: Record<string, string> = {
-      admin: "Administrador",
-      professor: "Professor",
-      user: "Aluno",
-    };
-    return labels[role] || role;
+    setIsUserDialogOpen(true);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-white">Gerenciamento de Usuários</h2>
-          <p className="text-slate-400">Gerencie administradores, professores e alunos</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12">
+      <div className="container mx-auto px-4 space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold text-white">Gerenciamento de Usuários</h2>
+            <p className="text-slate-400">Administre o acesso de alunos e professores</p>
+          </div>
+          <Button onClick={() => { resetForm(); setIsUserDialogOpen(true); }} className="bg-cyan-600 hover:bg-cyan-700">
+            <Plus className="w-4 h-4 mr-2" /> Novo Usuário
+          </Button>
         </div>
-        <Button
-          onClick={() => {
-            resetForm();
-            setIsOpen(true);
-          }}
-          className="bg-cyan-600 hover:bg-cyan-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Usuário
-        </Button>
+
+        <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-slate-800 border border-slate-700">
+            <TabsTrigger value="admin" className="data-[state=active]:bg-cyan-600">Administradores</TabsTrigger>
+            <TabsTrigger value="professor" className="data-[state=active]:bg-cyan-600">Professores</TabsTrigger>
+            <TabsTrigger value="student" className="data-[state=active]:bg-cyan-600">Alunos</TabsTrigger>
+          </TabsList>
+
+          <div className="mt-6 flex gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+              <Input placeholder="Buscar por nome ou e-mail..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-slate-700 border-slate-600 text-white" />
+            </div>
+          </div>
+
+          <div className="mt-8 space-y-4">
+            {isLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="w-12 h-12 animate-spin text-cyan-500" /></div>
+            ) : filteredUsers.length === 0 ? (
+              <Card className="bg-slate-800 border-slate-700"><CardContent className="py-12 text-center text-slate-400">Nenhum usuário encontrado</CardContent></Card>
+            ) : (
+              filteredUsers.map((user: any) => (
+                <Card key={user.id} className="bg-slate-800 border-slate-700">
+                  <CardContent className="py-6 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">{user.name?.[0]?.toUpperCase()}</div>
+                      <div>
+                        <h3 className="font-semibold text-white">{user.name}</h3>
+                        <p className="text-sm text-slate-400">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(user)} className="text-white border-slate-600 hover:bg-slate-700"><Edit2 className="w-4 h-4" /></Button>
+                      <Button size="sm" variant="outline" onClick={() => resetPasswordMutation.mutate({ userId: user.id })} className="text-cyan-400 border-slate-600 hover:bg-slate-700"><Key className="w-4 h-4" /></Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </Tabs>
       </div>
 
-      {/* Tabs */}
-      <Tabs value={selectedTab} onValueChange={(v) => setSelectedTab(v as any)} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-800">
-          <TabsTrigger value="admin" className="data-[state=active]:bg-cyan-600">
-            Administradores ({adminUsers.length})
-          </TabsTrigger>
-          <TabsTrigger value="professor" className="data-[state=active]:bg-cyan-600">
-            Professores ({professorUsers.length})
-          </TabsTrigger>
-          <TabsTrigger value="student" className="data-[state=active]:bg-cyan-600">
-            Alunos ({studentUsers.length})
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Search Bar */}
-        <div className="mt-6 flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="Buscar por nome ou email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-slate-700 border-slate-600 text-white"
-            />
-          </div>
-        </div>
-
-        {/* Admin Tab */}
-        <TabsContent value="admin" className="space-y-4 mt-6">
-          {filteredUsers.length === 0 ? (
-            <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="pt-6 text-center text-slate-400">
-                Nenhum administrador encontrado
-              </CardContent>
-            </Card>
-          ) : (
-            filteredUsers.map((user: any) => (
-              <Card key={user.id} className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{user.name}</h3>
-                      <p className="text-sm text-slate-400">{user.email}</p>
-                      <span className="inline-block mt-2 px-3 py-1 bg-red-900 text-red-200 rounded-full text-xs font-medium">
-                        {getRoleLabel(user.role)}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(user)}
-                        className="text-white border-slate-600 hover:bg-slate-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteUserMutation.mutate({ userId: user.id })}
-                        className="bg-red-900 hover:bg-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        {/* Professor Tab */}
-        <TabsContent value="professor" className="space-y-4 mt-6">
-          {filteredUsers.length === 0 ? (
-            <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="pt-6 text-center text-slate-400">
-                Nenhum professor encontrado
-              </CardContent>
-            </Card>
-          ) : (
-            filteredUsers.map((user: any) => (
-              <Card key={user.id} className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{user.name}</h3>
-                      <p className="text-sm text-slate-400">{user.email}</p>
-                      <span className="inline-block mt-2 px-3 py-1 bg-blue-900 text-blue-200 rounded-full text-xs font-medium">
-                        {getRoleLabel(user.role)}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(user)}
-                        className="text-white border-slate-600 hover:bg-slate-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteUserMutation.mutate({ userId: user.id })}
-                        className="bg-red-900 hover:bg-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        {/* Student Tab */}
-        <TabsContent value="student" className="space-y-4 mt-6">
-          {filteredUsers.length === 0 ? (
-            <Card className="bg-slate-800 border-slate-700">
-              <CardContent className="pt-6 text-center text-slate-400">
-                Nenhum aluno encontrado
-              </CardContent>
-            </Card>
-          ) : (
-            filteredUsers.map((user: any) => (
-              <Card key={user.id} className="bg-slate-800 border-slate-700">
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-white">{user.name}</h3>
-                      <p className="text-sm text-slate-400">{user.email}</p>
-                      <span className="inline-block mt-2 px-3 py-1 bg-green-900 text-green-200 rounded-full text-xs font-medium">
-                        {getRoleLabel(user.role)}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(user)}
-                        className="text-white border-slate-600 hover:bg-slate-700"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteUserMutation.mutate({ userId: user.id })}
-                        className="bg-red-900 hover:bg-red-800"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Edit/Create Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700">
-          <DialogHeader>
-            <DialogTitle className="text-white">
-              {editingId ? "Editar Usuário" : "Novo Usuário"}
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              {editingId ? "Atualize os dados do usuário" : "Crie um novo usuário"}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
+      {/* Dialog de Usuário */}
+      <Dialog open={isUserDialogOpen} onOpenChange={setIsUserDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader><DialogTitle>{editingId ? "Editar Usuário" : "Novo Usuário"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-white">
-                Nome
-              </Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Nome completo"
-                className="bg-slate-700 border-slate-600 text-white"
-                disabled={!!editingId}
-              />
+              <Label>Nome Completo</Label>
+              <Input value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="bg-slate-700 border-slate-600" />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="email@exemplo.com"
-                className="bg-slate-700 border-slate-600 text-white"
-                disabled={!!editingId}
-              />
+              <Label>E-mail</Label>
+              <Input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="bg-slate-700 border-slate-600" />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-white">
-                Função
-              </Label>
-              <Select value={formData.role} onValueChange={(role: any) => setFormData({ ...formData, role })}>
-                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
+              <Label>Papel (Role)</Label>
+              <Select value={formData.role} onValueChange={(v: any) => setFormData({...formData, role: v})}>
+                <SelectTrigger className="bg-slate-700 border-slate-600"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-slate-700 border-slate-600">
-                  <SelectItem value="admin" className="text-white">Administrador</SelectItem>
-                  <SelectItem value="professor" className="text-white">Professor</SelectItem>
-                  <SelectItem value="user" className="text-white">Aluno</SelectItem>
+                  <SelectItem value="user">Aluno</SelectItem>
+                  <SelectItem value="professor">Professor</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button
-                onClick={handleSubmit}
-                disabled={createUserMutation.isPending || updateUserMutation.isPending}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white"
-              >
-                {editingId ? "Atualizar" : "Criar"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={resetForm}
-                className="text-white border-slate-600 hover:bg-slate-700"
-              >
-                Cancelar
-              </Button>
+            <div className="space-y-2">
+              <Label>Senha {editingId ? "(deixe em branco para manter)" : "(opcional)"}</Label>
+              <Input type="password" value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="bg-slate-700 border-slate-600" />
             </div>
           </div>
+          <DialogFooter>
+            <Button onClick={handleSubmit} className="w-full bg-cyan-600">{editingId ? "Salvar Alterações" : "Criar Usuário"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Senha Temporária */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><UserCheck className="text-green-500" /> Senha Gerada</DialogTitle>
+            <DialogDescription className="text-slate-400">Anote a senha abaixo, ela não será mostrada novamente.</DialogDescription>
+          </DialogHeader>
+          <div className="bg-slate-900 p-6 rounded-lg text-center">
+            <span className="text-3xl font-mono font-bold text-cyan-400 tracking-wider">{tempPassword}</span>
+          </div>
+          <Button onClick={() => setIsPasswordDialogOpen(false)} className="w-full bg-cyan-600">Entendido</Button>
         </DialogContent>
       </Dialog>
     </div>

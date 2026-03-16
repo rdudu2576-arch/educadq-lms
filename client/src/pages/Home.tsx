@@ -129,7 +129,7 @@ export default function Home() {
         <div className="container max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setLocation("/")}>
             <img 
-              src="/assets/LOGOMARCA EDUCADQ P FUNDO ESCURO C TURQUESA.png" 
+              src="/assets/logo_escuro_turquesa.png" 
               alt="EducaDQ Logo" 
               className="h-10 w-auto object-contain"
               onError={(e) => {

@@ -5,15 +5,19 @@
   "installCommand": "npm install",
   "rewrites": [
     {
+      "source": "/api/trpc/(.*)",
+      "destination": "https://educadq-lms-production.up.railway.app/api/trpc/$1"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "https://educadq-lms-production.up.railway.app/api/$1"
     },
     {
       "source": "/trpc/(.*)",
-      "destination": "https://educadq-lms-production.up.railway.app/trpc/$1"
+      "destination": "https://educadq-lms-production.up.railway.app/api/trpc/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api|trpc|assets|favicon.ico).*)$",
       "destination": "/index.html"
     }
   ]
