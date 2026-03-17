@@ -21,7 +21,7 @@ const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   // 1. Já estiver na página de login ou registro
   // 2. A query que falhou for a 'auth.me' (usada para verificar sessão silenciosamente)
   const currentPath = window.location.pathname;
-  const isAuthMe = Array.isArray(queryKey) && queryKey.some(k => typeof k === 'string' && k.includes('auth.me'));
+  const isAuthMe = Array.isArray(queryKey) && queryKey[0] === 'auth' && queryKey[1] === 'me';
   
   if (currentPath === "/login" || currentPath === "/register" || isAuthMe) {
     return;
