@@ -4,6 +4,8 @@ import { Loader2, User, Mail, Lock, AlertCircle, CheckCircle2, Phone, CreditCard
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import SEO from "@/components/SEO";
+import { auth } from "@/lib/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function RegisterPage() {
   const [, setLocation] = useLocation();
@@ -65,38 +67,59 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.password.length < 8) {
+      setError("A senha deve ter pelo menos 8 caracteres.");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const result = await registerMutation.mutateAsync({
+      // 1. Criar usuário no Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const firebaseUser = userCredential.user;
+
+      // 2. Atualizar perfil no Firebase (nome)
+      await updateProfile(firebaseUser, {
+        displayName: formData.name
+      });
+
+      // 3. Registrar no backend para salvar dados adicionais e papel (role)
+      await registerMutation.mutateAsync({
         name: formData.name,
         email: formData.email,
-        password: formData.password,
-        role: "student",
-        // Passando os campos adicionais no objeto (o backend precisará ser atualizado para aceitar)
-        additionalData: {
-          rg: formData.rg,
-          cpf: formData.cpf,
-          phone: formData.phone,
-          age: formData.age,
-          cep: formData.cep,
-          address: formData.address,
-          number: formData.number,
-          complement: formData.complement,
-          neighborhood: formData.neighborhood,
-          city: formData.city,
-          state: formData.state,
-        }
-      } as any);
+        password: formData.password, // Enviamos para manter compatibilidade ou se o backend for criar o hash local
+        cpf: formData.cpf,
+        rg: formData.rg,
+        phone: formData.phone,
+        age: formData.age,
+        cep: formData.cep,
+        address: formData.address,
+        number: formData.number,
+        complement: formData.complement,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state,
+      });
 
-      if (result.userId) {
-        setIsSuccess(true);
-        setTimeout(() => {
-          setLocation("/student");
-        }, 2000);
-      }
+      setIsSuccess(true);
+      setTimeout(() => {
+        setLocation("/student");
+      }, 2000);
+      
     } catch (err: any) {
-      setError(err.message || "Erro ao criar conta. Tente novamente.");
+      console.error("Registration error:", err);
+      let errorMessage = "Erro ao criar conta. Tente novamente.";
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = "Este e-mail já está em uso.";
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = "E-mail inválido.";
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = "A senha é muito fraca.";
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -235,28 +258,35 @@ export default function RegisterPage() {
                     <label className="block text-sm font-medium text-foreground mb-1">Senha (mín. 8 caracteres)</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input name="password" type="password" value={formData.password} onChange={handleChange} className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:ring-2 focus:ring-primary outline-none" required minLength={8} disabled={isLoading} />
+                      <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="••••••••" className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:ring-2 focus:ring-primary outline-none" required disabled={isLoading} />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-1">Confirmar Senha</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:ring-2 focus:ring-primary outline-none" required disabled={isLoading} />
+                      <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:ring-2 focus:ring-primary outline-none" required disabled={isLoading} />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-600/50 text-white font-bold py-4 px-4 rounded-lg transition-all text-lg shadow-lg shadow-teal-900/20">
-              {isLoading ? <><Loader2 className="h-5 w-5 animate-spin" /> Criando conta...</> : "Finalizar meu Cadastro Grátis"}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-primary-foreground font-bold py-4 px-4 rounded-xl transition-all shadow-lg shadow-primary/20"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Criando sua conta...
+                </>
+              ) : (
+                "Finalizar Cadastro Gratuito"
+              )}
             </button>
           </form>
-
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">Já tem uma conta? <button onClick={() => setLocation("/login")} className="text-teal-400 hover:underline font-medium">Fazer login</button></p>
-          </div>
         </div>
       </div>
     </div>

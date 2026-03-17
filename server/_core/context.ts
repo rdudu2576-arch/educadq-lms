@@ -1,6 +1,6 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../infra/schema.pg.js";
-import { verifyToken, getUserById } from "../services/auth.service.js";
+import { verifyFirebaseToken, getUserById } from "../services/auth.service.js";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -14,12 +14,20 @@ export async function createContext(
   let user: User | null = null;
 
   try {
-    // Get token from cookies
-    const token = opts.req.cookies?.token;
+    // 1. Get token from cookies
+    let token = opts.req.cookies?.token;
+
+    // 2. Or from Authorization header (Bearer token)
+    if (!token && opts.req.headers.authorization) {
+      const authHeader = opts.req.headers.authorization;
+      if (authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7);
+      }
+    }
 
     if (token) {
-      // Verify JWT token
-      const payload = verifyToken(token);
+      // Verify Firebase ID Token
+      const payload = await verifyFirebaseToken(token);
 
       if (payload) {
         // Get user from database

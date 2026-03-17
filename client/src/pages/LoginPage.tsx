@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, BookOpen, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { trpc } from "@/lib/trpc";
 
 export default function LoginPage() {
@@ -11,8 +13,20 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const utils = trpc.useUtils();
 
-  const loginMutation = trpc.auth.login.useMutation();
+  // Redirecionar se já estiver logado
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        setLocation("/admin");
+      } else if (user.role === "professor") {
+        setLocation("/professor");
+      } else {
+        setLocation("/student");
+      }
+    }
+  }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,30 +34,29 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await loginMutation.mutateAsync({
-        email,
-        password,
-      });
+      // 1. Fazer login no Firebase
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      const idToken = await firebaseUser.getIdToken();
 
-      if (result.success) {
-        // Login bem-sucedido, redirecionar baseado no role
-        if (result.user.role === "admin") {
-          setLocation("/admin");
-        } else if (result.user.role === "professor") {
-          setLocation("/professor");
-        } else {
-          setLocation("/student");
-        }
-      }
+      // 2. Opcional: Notificar o backend sobre o login para persistir sessão ou obter dados extras
+      // No momento, o backend usará o token do Firebase para validação
+      // Vamos forçar a atualização da query 'me' para carregar os dados do backend
+      await utils.auth.me.invalidate();
+      
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
+      console.error("Login error:", err);
+      let errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        errorMessage = "Email ou senha inválidos.";
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMessage = "Muitas tentativas sem sucesso. Tente novamente mais tarde.";
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Permitir que usuários logados acessem /login para fazer logout
-  // Não redirecionar automaticamente
 
   if (authLoading) {
     return (

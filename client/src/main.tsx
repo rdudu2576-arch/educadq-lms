@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
+import { auth } from "@/lib/firebase";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -17,9 +18,6 @@ const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
   if (!isUnauthorized) return;
 
-  // NÃO redirecionar se:
-  // 1. Já estiver na página de login ou registro
-  // 2. A query que falhou for a 'auth.me' (usada para verificar sessão silenciosamente)
   const currentPath = window.location.pathname;
   const isAuthMe = Array.isArray(queryKey) && queryKey[0] === 'auth' && queryKey[1] === 'me';
   
@@ -42,7 +40,6 @@ queryClient.getQueryCache().subscribe(event => {
 queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
-    // Para mutações, não passamos queryKey, mas o redirectToLoginIfUnauthorized já verifica o path
     redirectToLoginIfUnauthorized(error);
     console.error("[API Mutation Error]", error);
   }
@@ -53,6 +50,16 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
       transformer: superjson,
+      async headers() {
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken();
+          return {
+            Authorization: `Bearer ${token}`,
+          };
+        }
+        return {};
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
@@ -70,5 +77,3 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </trpc.Provider>
 );
-// Fresh deployment Fri Mar 13 23:59:31 EDT 2026
-// Vercel config update Sat Mar 14 00:04:46 EDT 2026
