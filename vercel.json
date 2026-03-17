@@ -17,7 +17,7 @@
       "destination": "https://educadq-lms-production.up.railway.app/api/trpc/$1"
     },
     {
-      "source": "/((?!api|trpc|assets|favicon.ico).*)$",
+      "source": "/((?!api|trpc|_next|assets|favicon.ico|.*\\.).*)",
       "destination": "/index.html"
     }
   ]
