@@ -4,7 +4,7 @@ import { router } from "./trpc.js";
 import { createContext } from "./context.js";
 
 /* AUTH */
-import { authRouter } from "../domain/users/authRouter.js"
+import { authRouter } from "../domain/users/auth.js"
 import { deviceAccountsRouter } from "../domain/auth/deviceAccountsRouter.js";
 import { passwordResetRouter } from "../domain/auth/passwordResetRouter.js";
 
