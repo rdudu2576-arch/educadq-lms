@@ -14,7 +14,8 @@
     "build:client": "vite build",
     "build": "npm run build:client && npm run build:server",
     "dev": "tsx watch server/index.ts",
-    "test": "vitest"
+    "test": "vitest",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.66.9",
