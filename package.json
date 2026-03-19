@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "imports": {
+    "#shared/*.js": "./shared/*.js",
+    "#shared/*": "./shared/*"
+  },
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "npm run build:client && npm run build:server",
