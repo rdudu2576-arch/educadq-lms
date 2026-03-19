@@ -94,9 +94,18 @@ export async function getUserByOpenId(openId: string) {
 }
 
 export async function getUserById(id: number) {
+  // PROBLEMA IDENTIFICADO: Falta de logs para rastrear falhas na busca de usuários por ID.
+  // CAUSA RAIZ: O sistema retornava undefined sem explicar se era erro de conexão ou usuário inexistente.
+  // CORREÇÃO: Adicionados logs de entrada e resultado.
+  // POR QUE RESOLVE: Permite validar se o ID extraído do JWT realmente existe no banco de dados.
+  console.log(`[Database] Buscando usuário por ID: ${id}`);
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    console.error("[Database] Falha ao obter instância do banco para getUserById");
+    return undefined;
+  }
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  if (!result[0]) console.warn(`[Database] Usuário com ID ${id} não encontrado`);
   return result[0] ?? undefined;
 }
 
@@ -115,9 +124,14 @@ export async function updateUserRole(userId: number, role: "admin" | "professor"
 
 export async function getUserByEmail(email: string) {
   if (!email) return undefined;
+  console.log(`[Database] Buscando usuário por email: ${email}`);
   const db = await getDb();
-  if (!db) return undefined;
+  if (!db) {
+    console.error("[Database] Falha ao obter instância do banco para getUserByEmail");
+    return undefined;
+  }
   const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  if (!result[0]) console.warn(`[Database] Usuário com email ${email} não encontrado`);
   return result[0] ?? undefined;
 }
 
