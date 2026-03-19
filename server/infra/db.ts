@@ -35,17 +35,33 @@ let _pool: pg.Pool | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
+      // O erro ENETUNREACH com IPv6 (2600:...) indica que o ambiente (Railway)
+      // está tentando conectar via IPv6 mas não tem rota.
+      // Adicionando configurações para melhorar a resiliência.
       _pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: {
           rejectUnauthorized: false
-        }
+        },
+        // Configurações de timeout e keepalive para evitar conexões presas
+        connectionTimeoutMillis: 10000, // 10s
+        idleTimeoutMillis: 30000, // 30s
+        max: 20, // Limite de conexões no pool
       });
+
+      // Tratamento de erro no pool para evitar que o processo caia
+      _pool.on('error', (err) => {
+        console.error('[Database] Unexpected error on idle client', err);
+        _db = null;
+        _pool = null;
+      });
+
       _db = drizzle(_pool);
       console.log("[Database] Persistent PostgreSQL connection pool initialized");
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
+      _pool = null;
     }
   }
   return _db;
@@ -331,172 +347,46 @@ export async function getLessonsByCourse(courseId: number) {
 export async function getArticles(limit = 50, offset = 0) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(articles).where(eq(articles.isPublished, true)).orderBy(desc(articles.createdAt)).limit(limit).offset(offset);
+  return db.select().from(articles).orderBy(desc(articles.createdAt)).limit(limit).offset(offset);
 }
 
-export async function getAllArticles() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(articles).orderBy(desc(articles.createdAt));
-}
-
-// ============================================================================
-// ENROLLMENTS
-// ============================================================================
-
-export async function enrollStudent(studentId: number, courseId: number) {
+export async function getArticleBySlug(slug: string) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(enrollments).values({
-    studentId,
-    courseId,
-    status: "active",
-    enrolledAt: new Date(),
-  } as any).returning();
+  const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
   return result[0] ?? null;
 }
 
-export async function getEnrollmentStatus(studentId: number, courseId: number) {
+export async function getArticleById(id: number) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.select().from(enrollments).where(
-    and(eq(enrollments.studentId, studentId), eq(enrollments.courseId, courseId))
-  ).limit(1);
+  const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
   return result[0] ?? null;
 }
 
-export async function getCourseBySlugOrId(slugOrId: string | number) {
+export async function createArticle(data: any) {
   const db = await getDb();
   if (!db) return null;
-  
-  if (typeof slugOrId === "number") {
-    return getCourseById(slugOrId);
-  }
-  
-  const result = await db.select().from(courses).where(eq(courses.slug, slugOrId)).limit(1);
-  return result[0] ?? null;
+  const result = await db.insert(articles).values(data as any).returning();
+  return result[0]?.id ?? null;
 }
 
-// ============================================================================
-// LESSONS (MATERIALS)
-// ============================================================================
-
-export async function createLessonMaterial(data: any) {
+export async function updateArticle(id: number, data: any) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(lessonMaterials).values(data as any).returning();
-  return result[0] ?? null;
+  await db.update(articles).set(data as any).where(eq(articles.id, id));
+  return getArticleById(id);
 }
 
-export async function getMaterialsByLesson(lessonId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(lessonMaterials).where(eq(lessonMaterials.lessonId, lessonId));
-}
-
-export async function deleteLessonMaterial(id: number) {
+export async function deleteArticle(id: number) {
   const db = await getDb();
   if (!db) return;
-  await db.delete(lessonMaterials).where(eq(lessonMaterials.id, id));
-}
-
-// ============================================================================
-// PROGRESS
-// ============================================================================
-
-export async function recordLessonProgress(studentId: number, lessonId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.insert(lessonProgress).values({
-    studentId,
-    lessonId,
-    status: "completed",
-    completedAt: new Date(),
-  } as any).returning();
-  return result[0] ?? null;
-}
-
-export async function getStudentLessonProgress(studentId: number, courseId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  
-  const lessons = await getLessonsByCourse(courseId);
-  if (lessons.length === 0) return [];
-  
-  const result = await db.select().from(lessonProgress).where(
-    and(
-      eq(lessonProgress.studentId, studentId),
-      inArray(lessonProgress.lessonId, lessons.map(l => l.id))
-    )
-  );
-  return result;
-}
-
-export async function calculateCourseProgress(studentId: number, courseId: number) {
-  const db = await getDb();
-  if (!db) return 0;
-  
-  const lessons = await getLessonsByCourse(courseId);
-  if (lessons.length === 0) return 0;
-  
-  const completed = await db.select().from(lessonProgress).where(
-    and(
-      eq(lessonProgress.studentId, studentId),
-      inArray(lessonProgress.lessonId, lessons.map(l => l.id)),
-      eq(lessonProgress.status, "completed")
-    )
-  );
-  
-  return Math.round((completed.length / lessons.length) * 100);
-}
-
-export async function getStudentAssessmentScore(studentId: number, assessmentId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.select().from(assessmentResults).where(
-    and(eq(assessmentResults.studentId, studentId), eq(assessmentResults.assessmentId, assessmentId))
-  ).orderBy(desc(assessmentResults.createdAt)).limit(1);
-  return result[0] ?? null;
-}
-
-export async function createCertificate(data: any) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.insert(certificates).values(data as any).returning();
-  return result[0] ?? null;
-}
-
-export async function getCertificateByCourse(studentId: number, courseId: number) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.select().from(certificates).where(
-    and(eq(certificates.studentId, studentId), eq(certificates.courseId, courseId))
-  ).limit(1);
-  return result[0] ?? null;
+  await db.delete(articles).where(eq(articles.id, id));
 }
 
 // ============================================================================
 // PAYMENTS
 // ============================================================================
-
-export async function createPayment(data: any) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.insert(payments).values(data as any).returning();
-  return result[0] ?? null;
-}
-
-export async function getPaymentsByStudent(studentId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(payments).where(eq(payments.studentId, studentId)).orderBy(desc(payments.createdAt));
-}
-
-export async function getPaymentsByCourse(courseId: number) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(payments).where(eq(payments.courseId, courseId));
-}
 
 export async function getAllPayments() {
   const db = await getDb();
@@ -680,44 +570,6 @@ export async function updateUserProfile(userId: number, data: any) {
   if (!db) return null;
   await db.update(users).set(data as any).where(eq(users.id, userId));
   return getUserById(userId);
-}
-
-// ============================================================================
-// ARTICLES
-// ============================================================================
-
-export async function getArticleBySlug(slug: string) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.select().from(articles).where(eq(articles.slug, slug)).limit(1);
-  return result[0] ?? null;
-}
-
-export async function getArticleById(id: number) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.select().from(articles).where(eq(articles.id, id)).limit(1);
-  return result[0] ?? null;
-}
-
-export async function createArticle(data: any) {
-  const db = await getDb();
-  if (!db) return null;
-  const result = await db.insert(articles).values(data as any).returning();
-  return result[0]?.id ?? null;
-}
-
-export async function updateArticle(id: number, data: any) {
-  const db = await getDb();
-  if (!db) return null;
-  await db.update(articles).set(data as any).where(eq(articles.id, id));
-  return getArticleById(id);
-}
-
-export async function deleteArticle(id: number) {
-  const db = await getDb();
-  if (!db) return;
-  await db.delete(articles).where(eq(articles.id, id));
 }
 
 // ============================================================================
