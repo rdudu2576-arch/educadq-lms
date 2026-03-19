@@ -28,41 +28,35 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, user, setLocation]);
 
+  const loginMutation = trpc.auth.login.useMutation();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
+    // PROBLEMA IDENTIFICADO: O login estava tentando usar Firebase no frontend, mas o backend
+    // possui sua própria lógica de autenticação via JWT e cookies no authRouter.ts.
+    // CAUSA RAIZ: Inconsistência entre o fluxo de autenticação do frontend e backend.
+    // CORREÇÃO: Alterado para usar a mutation auth.login do tRPC, que gera o cookie JWT.
+    // POR QUE RESOLVE: Unifica o fluxo de autenticação, garantindo que o backend reconheça a sessão.
     try {
-      // 1. Fazer login no Firebase
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      const result = await loginMutation.mutateAsync({ email, password });
       
-      // 2. Aguardar um pouco para o Firebase sincronizar com o contexto do tRPC
-      // O main.tsx vai enviar o token nas próximas requisições
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 3. Forçar a atualização da query 'me' para carregar os dados do backend
-      await utils.auth.me.invalidate();
-      
-      // 4. Aguardar a query ser refetchada
-      const meResult = await utils.auth.me.fetch();
-      
-      if (meResult) {
-        // Sucesso! O redirecionamento acontecerá via useEffect acima
-      } else {
-        setError("Falha ao carregar dados do usuário. Tente novamente.");
+      if (result.success) {
+        // 2. Forçar a atualização da query 'me' para carregar os dados do backend
+        await utils.auth.me.invalidate();
+        const meResult = await utils.auth.me.fetch();
+        
+        if (meResult) {
+          // Sucesso! O redirecionamento acontecerá via useEffect acima
+        } else {
+          setError("Falha ao carregar dados do usuário após o login.");
+        }
       }
-      
     } catch (err: any) {
       console.error("Login error:", err);
-      let errorMessage = "Erro ao fazer login. Verifique suas credenciais.";
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        errorMessage = "Email ou senha inválidos.";
-      } else if (err.code === 'auth/too-many-requests') {
-        errorMessage = "Muitas tentativas sem sucesso. Tente novamente mais tarde.";
-      }
-      setError(errorMessage);
+      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
     } finally {
       setIsLoading(false);
     }
