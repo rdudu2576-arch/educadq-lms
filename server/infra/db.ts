@@ -35,21 +35,16 @@ let _pool: pg.Pool | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      // O erro ENETUNREACH com IPv6 (2600:...) indica que o ambiente (Railway)
-      // está tentando conectar via IPv6 mas não tem rota.
-      // Adicionando configurações para melhorar a resiliência.
       _pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: {
           rejectUnauthorized: false
         },
-        // Configurações de timeout e keepalive para evitar conexões presas
-        connectionTimeoutMillis: 10000, // 10s
-        idleTimeoutMillis: 30000, // 30s
-        max: 20, // Limite de conexões no pool
+        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 30000,
+        max: 20,
       });
 
-      // Tratamento de erro no pool para evitar que o processo caia
       _pool.on('error', (err) => {
         console.error('[Database] Unexpected error on idle client', err);
         _db = null;
@@ -66,10 +61,6 @@ export async function getDb() {
   }
   return _db;
 }
-
-// ============================================================================
-// USERS
-// ============================================================================
 
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) throw new Error("User openId is required");
@@ -167,10 +158,6 @@ export async function updateUser(userId: number, data: {
   return getUserById(userId);
 }
 
-// ============================================================================
-// COURSES
-// ============================================================================
-
 export async function createCourse(data: {
   title: string;
   description?: string;
@@ -236,10 +223,6 @@ export async function deleteCourse(id: number) {
   await db.update(courses).set({ isActive: false } as any).where(eq(courses.id, id));
 }
 
-// ============================================================================
-// MODULES
-// ============================================================================
-
 export async function createModule(data: { courseId: number; title: string; description?: string; order: number }) {
   const db = await getDb();
   if (!db) throw new Error("Database connection failed");
@@ -272,10 +255,6 @@ export async function deleteModule(id: number) {
   if (!db) return;
   await db.delete(modules).where(eq(modules.id, id));
 }
-
-// ============================================================================
-// LESSONS
-// ============================================================================
 
 export async function createLesson(data: {
   moduleId: number;
@@ -340,10 +319,6 @@ export async function getLessonsByCourse(courseId: number) {
   return db.select().from(lessons).where(inArray(lessons.moduleId, moduleIds)).orderBy(asc(lessons.order));
 }
 
-// ============================================================================
-// ARTICLES
-// ============================================================================
-
 export async function getArticles(limit = 50, offset = 0) {
   const db = await getDb();
   if (!db) return [];
@@ -384,10 +359,6 @@ export async function deleteArticle(id: number) {
   await db.delete(articles).where(eq(articles.id, id));
 }
 
-// ============================================================================
-// PAYMENTS
-// ============================================================================
-
 export async function getAllPayments() {
   const db = await getDb();
   if (!db) return [];
@@ -412,10 +383,6 @@ export async function getOverduePayments() {
     )
   );
 }
-
-// ============================================================================
-// PROFESSIONALS / RANKING
-// ============================================================================
 
 export async function getRanking(limit = 100) {
   const db = await getDb();
@@ -525,10 +492,6 @@ export async function getAllIntegrityChecks() {
   return db.select().from(integrityChecks).orderBy(desc(integrityChecks.createdAt));
 }
 
-// ============================================================================
-// PAGE CONTENT
-// ============================================================================
-
 export async function getPageContent(pageKey: string) {
   const db = await getDb();
   if (!db) return [];
@@ -561,20 +524,12 @@ export async function getAllPageContent() {
   return db.select().from(pageContent);
 }
 
-// ============================================================================
-// USER PROFILE
-// ============================================================================
-
 export async function updateUserProfile(userId: number, data: any) {
   const db = await getDb();
   if (!db) return null;
   await db.update(users).set(data as any).where(eq(users.id, userId));
   return getUserById(userId);
 }
-
-// ============================================================================
-// ENROLLMENTS / OTHERS
-// ============================================================================
 
 export async function getCourseEnrollments(courseId: number) {
   const db = await getDb();
