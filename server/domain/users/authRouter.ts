@@ -46,10 +46,20 @@ export const authRouter = router({
 
       setAuthCookie(ctx.res, token);
 
+      console.log(`[Auth] Login bem-sucedido para: ${input.email}`);
       return {
         success: true,
         user,
       };
+      } catch (error) {
+        console.error("[Auth] Erro crítico no processo de login:", error);
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro interno ao processar o login.",
+          cause: error,
+        });
+      }
     }),
 
   login: publicProcedure
@@ -60,14 +70,20 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const user = await db.getUserByEmail(input.email);
+      // PROBLEMA IDENTIFICADO: O login falhava com erro 500 sem logs claros no backend.
+      // CAUSA RAIZ: Falta de tratamento de erros e logs nas chamadas de banco de dados no roteador.
+      // CORREÇÃO: Adicionado bloco try-catch e logs explícitos para capturar erros de conexão ou consulta.
+      // POR QUE RESOLVE: Permite identificar se a falha é no banco de dados (como o erro ENOTFOUND) ou nas credenciais.
+      try {
+        const user = await db.getUserByEmail(input.email);
 
-      if (!user) {
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Credenciais inválidas.",
-        });
-      }
+        if (!user) {
+          console.warn(`[Auth] Tentativa de login falhou: usuário não encontrado (${input.email})`);
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Credenciais inválidas.",
+          });
+        }
 
       const validPassword = user.password ? await bcrypt.compare(
         input.password,
@@ -89,10 +105,20 @@ export const authRouter = router({
 
       setAuthCookie(ctx.res, token);
 
+      console.log(`[Auth] Login bem-sucedido para: ${input.email}`);
       return {
         success: true,
         user,
       };
+      } catch (error) {
+        console.error("[Auth] Erro crítico no processo de login:", error);
+        if (error instanceof TRPCError) throw error;
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro interno ao processar o login.",
+          cause: error,
+        });
+      }
     }),
 
   logout: publicProcedure.mutation(({ ctx }) => {
