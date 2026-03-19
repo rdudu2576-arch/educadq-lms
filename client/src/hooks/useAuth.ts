@@ -16,39 +16,28 @@ export function useAuth(options?: UseAuthOptions) {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [fbLoading, setFbLoading] = useState(true);
 
-  // Sync Firebase Auth state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setFirebaseUser(user);
-      setFbLoading(false);
-      
-      // Quando o estado do Firebase muda, invalidamos a query do tRPC
-      // para que o backend também se atualize se necessário
-      utils.auth.me.invalidate();
-    });
-    return () => unsubscribe();
-  }, [utils]);
-
-  // Backend query to get user details (role, etc)
+  // PROBLEMA IDENTIFICADO: O hook useAuth dependia exclusivamente do estado do Firebase.
+  // CAUSA RAIZ: O sistema foi migrado para JWT/Cookies no backend, mas o frontend ainda buscava o Firebase.
+  // CORREÇÃO: Alterado para depender da query 'me' do tRPC, que valida o cookie JWT.
+  // POR QUE RESOLVE: Garante que a sessão seja persistida via cookies, independente do Firebase.
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
-    refetchOnWindowFocus: false,
-    // Só habilitamos se tivermos um usuário no Firebase
-    enabled: !!firebaseUser,
+    refetchOnWindowFocus: true,
   });
+
+  const logoutMutation = trpc.auth.logout.useMutation();
 
   const logout = useCallback(async () => {
     try {
-      await signOut(auth);
-      // Opcionalmente chamar o logout do backend para limpar cookies
-      // mas o principal agora é o Firebase
+      await logoutMutation.mutateAsync();
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      window.location.href = "/login";
     } catch (error: unknown) {
       console.error("Erro ao fazer logout:", error);
       throw error;
     }
-  }, [utils]);
+  }, [utils, logoutMutation]);
 
   const state = useMemo(() => {
     const user = meQuery.data ?? null;
@@ -62,17 +51,14 @@ export function useAuth(options?: UseAuthOptions) {
 
     return {
       user,
-      firebaseUser,
-      loading: fbLoading || (!!firebaseUser && meQuery.isLoading),
+      loading: meQuery.isLoading,
       error: meQuery.error ?? null,
-      isAuthenticated: !!firebaseUser && !!meQuery.data,
+      isAuthenticated: !!meQuery.data,
     };
   }, [
     meQuery.data,
     meQuery.error,
     meQuery.isLoading,
-    firebaseUser,
-    fbLoading,
   ]);
 
   useEffect(() => {
