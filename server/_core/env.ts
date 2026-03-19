@@ -9,4 +9,9 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   mercadoPagoAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN ?? "",
   mercadoPagoPublicKey: process.env.MERCADO_PAGO_PUBLIC_KEY ?? "",
+
+  // 🔥 ADICIONE ISSO (Firebase Admin)
+  firebaseProjectId: process.env.FIREBASE_PROJECT_ID ?? "",
+  firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? "",
+  firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n") ?? "",
 };
