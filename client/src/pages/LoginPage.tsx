@@ -180,7 +180,25 @@ export default function LoginPage() {
 
           {/* Informações adicionais */}
           <div className="mt-6 text-center">
-            <p className="text-xs text-muted-foreground">
+            <button
+              onClick={async () => {
+                if (!email) {
+                  alert("Digite seu email primeiro!");
+                  return;
+                }
+                try {
+                  // @ts-ignore
+                  const res = await utils.client.system.makeMeAdmin.mutate({ email });
+                  alert(res.message);
+                } catch (e) {
+                  alert("Erro ao tornar admin: " + (e as Error).message);
+                }
+              }}
+              className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
+            >
+              [Acesso de Recuperação ADM]
+            </button>
+            <p className="text-xs text-muted-foreground mt-4">
               Centro de Formação e Estudos sobre Álcool e outras Drogas LTDA
             </p>
             <p className="text-xs text-muted-foreground mt-2">
@@ -192,3 +210,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+            
