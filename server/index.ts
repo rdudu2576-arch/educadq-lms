@@ -29,6 +29,17 @@ app.use(cors({
 
 app.use("/api/trpc", apiRateLimiter);
 
+app.use(
+  "/api/trpc",
+  trpcExpress.createExpressMiddleware({
+    router: appRouter,
+    createContext,
+    onError({ error, path }) {
+      console.error("[tRPC]", path, error);
+    },
+  })
+);
+
 app.get("/health", (_, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
@@ -103,17 +114,6 @@ if (fs.existsSync(distPath)) {
     })
   );
 }
-
-app.use(
-  "/api/trpc",
-  trpcExpress.createExpressMiddleware({
-    router: appRouter,
-    createContext,
-    onError({ error, path }) {
-      console.error("[tRPC]", path, error);
-    },
-  })
-);
 
 const indexFile = path.join(distPath, "index.html");
 
