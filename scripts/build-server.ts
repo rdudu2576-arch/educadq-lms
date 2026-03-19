@@ -14,6 +14,10 @@ async function build() {
       target: 'node20',
       outfile: path.resolve(__dirname, '../dist/server/index.js'),
       format: 'esm',
+      alias: {
+        '#shared': path.resolve(__dirname, '../shared'),
+        '@shared': path.resolve(__dirname, '../shared'),
+      },
       external: [
         'express',
         'pg',
