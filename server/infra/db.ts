@@ -34,6 +34,16 @@ let _pool: pg.Pool | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
+    // PROBLEMA IDENTIFICADO: O backend estava tentando conectar a um host inexistente ("base"),
+    // causando erro ENOTFOUND. Isso ocorre quando a DATABASE_URL está mal configurada ou vazia.
+    // CAUSA RAIZ: Falta de validação da URL de conexão antes de inicializar o Pool.
+    // CORREÇÃO: Adicionada validação explícita e log de erro detalhado.
+    // POR QUE RESOLVE: Impede que o driver tente resolver um host inválido e fornece feedback claro nos logs.
+    if (process.env.DATABASE_URL.includes("base") || !process.env.DATABASE_URL.startsWith("postgres")) {
+      console.error("[Database] Erro: DATABASE_URL inválida ou contém host 'base' incorreto.");
+      return null;
+    }
+
     try {
       _pool = new Pool({
         connectionString: process.env.DATABASE_URL,
