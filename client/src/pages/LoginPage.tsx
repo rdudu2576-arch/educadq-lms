@@ -7,7 +7,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { trpc } from "@/lib/trpc";
 
 export default function LoginPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   // Redirecionar se já estiver logado
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated && user) {
       if (user.role === "admin") {
         setLocation("/admin");
       } else if (user.role === "professor") {
@@ -26,7 +26,7 @@ export default function LoginPage() {
         setLocation("/student");
       }
     }
-  }, [user, setLocation]);
+  }, [isAuthenticated, user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +37,22 @@ export default function LoginPage() {
       // 1. Fazer login no Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
-      const idToken = await firebaseUser.getIdToken();
-
-      // 2. Opcional: Notificar o backend sobre o login para persistir sessão ou obter dados extras
-      // No momento, o backend usará o token do Firebase para validação
-      // Vamos forçar a atualização da query 'me' para carregar os dados do backend
+      
+      // 2. Aguardar um pouco para o Firebase sincronizar com o contexto do tRPC
+      // O main.tsx vai enviar o token nas próximas requisições
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 3. Forçar a atualização da query 'me' para carregar os dados do backend
       await utils.auth.me.invalidate();
+      
+      // 4. Aguardar a query ser refetchada
+      const meResult = await utils.auth.me.fetch();
+      
+      if (meResult) {
+        // Sucesso! O redirecionamento acontecerá via useEffect acima
+      } else {
+        setError("Falha ao carregar dados do usuário. Tente novamente.");
+      }
       
     } catch (err: any) {
       console.error("Login error:", err);
