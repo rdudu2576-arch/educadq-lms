@@ -19,44 +19,49 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const existing = await db.getUserByEmail(input.email);
+      // PROBLEMA IDENTIFICADO: O registro de usuários não tinha tratamento de erro adequado.
+      // CAUSA RAIZ: Falta de bloco try-catch, o que poderia causar erro 500 sem logs.
+      // CORREÇÃO: Adicionado bloco try-catch e logs de depuração.
+      // POR QUE RESOLVE: Garante que falhas no banco de dados durante o registro sejam capturadas e logadas.
+      try {
+        const existing = await db.getUserByEmail(input.email);
 
-      if (existing) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Este e-mail já está cadastrado.",
+        if (existing) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Este e-mail já está cadastrado.",
+          });
+        }
+
+        const hashedPassword = await bcrypt.hash(input.password, 10);
+
+        const user = await db.createUser({
+          email: input.email,
+          password: hashedPassword,
+          name: input.name,
+          role: input.role,
+          additionalData: input.additionalData ?? null,
         });
-      }
 
-      const hashedPassword = await bcrypt.hash(input.password, 10);
+        const token = generateToken({
+          id: user.id,
+          email: user.email!,
+          role: user.role,
+        });
 
-      const user = await db.createUser({
-        email: input.email,
-        password: hashedPassword,
-        name: input.name,
-        role: input.role,
-        additionalData: input.additionalData ?? null,
-      });
+        setAuthCookie(ctx.res, token);
 
-      const token = generateToken({
-        id: user.id,
-        email: user.email!,
-        role: user.role,
-      });
-
-      setAuthCookie(ctx.res, token);
-
-      console.log(`[Auth] Login bem-sucedido para: ${input.email}`);
-      return {
-        success: true,
-        user,
-      };
+        console.log(`[Auth] Registro e login bem-sucedido para: ${input.email}`);
+        return {
+          success: true,
+          user,
+        };
       } catch (error) {
-        console.error("[Auth] Erro crítico no processo de login:", error);
+        console.error("[Auth] Erro crítico no processo de registro:", error);
         if (error instanceof TRPCError) throw error;
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Erro interno ao processar o login.",
+          message: "Erro interno ao processar o registro.",
           cause: error,
         });
       }
