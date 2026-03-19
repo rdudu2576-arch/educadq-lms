@@ -1,10 +1,7 @@
 import jwt from "jsonwebtoken";
 import { TRPCError } from "@trpc/server";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not set");
-}
+const JWT_SECRET = process.env.JWT_SECRET || "development-secret-key";
 const JWT_EXPIRY = "7d";
 
 export interface JWTPayload {
@@ -44,17 +41,24 @@ export function extractTokenFromCookie(cookieHeader?: string): string | null {
 export function setAuthCookie(
   res: any,
   token: string,
-  secure: boolean = true
 ): void {
+  const isProd = process.env.NODE_ENV === "production";
+  const secure = isProd ? "Secure;" : "";
+  const sameSite = isProd ? "SameSite=None;" : "SameSite=Lax;";
+  
   res.setHeader(
     "Set-Cookie",
-    `token=${token}; HttpOnly; Secure=${secure}; SameSite=None; Path=/; Max-Age=${7 * 24 * 60 * 60}`
+    `token=${token}; HttpOnly; ${secure} ${sameSite} Path=/; Max-Age=${7 * 24 * 60 * 60}`
   );
 }
 
 export function clearAuthCookie(res: any): void {
+  const isProd = process.env.NODE_ENV === "production";
+  const secure = isProd ? "Secure;" : "";
+  const sameSite = isProd ? "SameSite=None;" : "SameSite=Lax;";
+
   res.setHeader(
     "Set-Cookie",
-    "token=; HttpOnly; Secure=true; SameSite=None; Path=/; Max-Age=0"
+    `token=; HttpOnly; ${secure} ${sameSite} Path=/; Max-Age=0`
   );
 }
