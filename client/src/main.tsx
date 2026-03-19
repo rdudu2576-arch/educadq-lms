@@ -51,13 +51,10 @@ const trpcClient = trpc.createClient({
       url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
       transformer: superjson,
       async headers() {
-        const user = auth.currentUser;
-        if (user) {
-          const token = await user.getIdToken();
-          return {
-            Authorization: `Bearer ${token}`,
-          };
-        }
+        // PROBLEMA IDENTIFICADO: O frontend tentava enviar um token do Firebase no header Authorization.
+        // CAUSA RAIZ: O backend foi migrado para JWT/Cookies, tornando o token do Firebase irrelevante ou conflitante.
+        // CORREÇÃO: Removida a lógica de header do Firebase. O backend agora usa cookies HttpOnly (credentials: "include").
+        // POR QUE RESOLVE: Permite que o navegador envie automaticamente o cookie JWT, simplificando o fluxo.
         return {};
       },
       fetch(input, init) {
