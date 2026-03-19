@@ -10,6 +10,9 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+/**
+ * 🔐 Redireciona para login se não autenticado
+ */
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
@@ -21,6 +24,9 @@ const redirectToLoginIfUnauthorized = (error: unknown) => {
   window.location.href = getLoginUrl();
 };
 
+/**
+ * 👀 Observa erros nas queries
+ */
 queryClient.getQueryCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.query.state.error;
@@ -29,6 +35,9 @@ queryClient.getQueryCache().subscribe(event => {
   }
 });
 
+/**
+ * 👀 Observa erros nas mutations
+ */
 queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
@@ -37,11 +46,18 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+/**
+ * 🚀 CLIENTE tRPC (CORRIGIDO)
+ * Agora aponta para o backend no Railway
+ */
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      // 🔥 URL CORRETA DO BACKEND
+      url: "https://educadq-lms-production.up.railway.app/api/trpc",
+
       transformer: superjson,
+
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
@@ -52,6 +68,9 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+/**
+ * 🎨 Render da aplicação
+ */
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
