@@ -168,7 +168,17 @@ export async function createUser(data: {
     values.number = data.additionalData.number;
   }
 
+  // PROBLEMA IDENTIFICADO: Falta de logs e tratamento de retorno na criação de usuários.
+  // CAUSA RAIZ: O sistema poderia falhar na inserção sem deixar rastros nos logs.
+  // CORREÇÃO: Adicionados logs de depuração e validação do resultado da inserção.
+  // POR QUE RESOLVE: Garante que saibamos se o usuário foi realmente criado no banco de dados.
+  console.log(`[Database] Criando novo usuário: ${data.email}`);
   const result = await db.insert(users).values(values as any).returning();
+  if (!result[0]) {
+    console.error(`[Database] Falha ao criar usuário: ${data.email}`);
+    throw new Error("Failed to create user in database");
+  }
+  console.log(`[Database] Usuário criado com sucesso: ${data.email} (ID: ${result[0].id})`);
   return result[0];
 }
 
