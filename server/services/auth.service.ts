@@ -133,16 +133,16 @@ export async function loginUser(email: string, password: string) {
   const user = result[0];
 
   if (!user) {
-    throw new Error("Invalid email or password");
+    throw new Error("Usuário não encontrado ou senha incorreta");
   }
 
   if (!user.password) {
-    throw new Error("User account is not properly configured for password login");
+    throw new Error("Conta de usuário não configurada corretamente para login com senha");
   }
 
   const isPasswordValid = await comparePassword(password, user.password);
   if (!isPasswordValid) {
-    throw new Error("Invalid email or password");
+    throw new Error("Usuário não encontrado ou senha incorreta");
   }
 
   const token = generateToken({
