@@ -11,6 +11,28 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // BYPASS INTERCEPTOR: Totalmente local, sem chamadas ao servidor
+  const bypassEmails: { [key: string]: string } = {
+    'admin@educadq.com': 'admin',
+    'professor@educadq.com': 'professor',
+    'aluno@educadq.com': 'aluno',
+    'dev@educadq.com': 'desenvolvedor',
+  };
+
+  // Processar parâmetro 'role' da URL para preenchimento automático
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get('role');
+    
+    if (roleParam) {
+      const emailForRole = Object.keys(bypassEmails).find(key => bypassEmails[key] === roleParam);
+      if (emailForRole) {
+        setEmail(emailForRole);
+        setPassword("bypass-auth-v2"); // Senha fictícia para habilitar o botão
+      }
+    }
+  }, []);
+
   // Redirecionar se já estiver logado
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -31,15 +53,7 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    // BYPASS INTERCEPTOR: Totalmente local, sem chamadas ao servidor
-    const bypassEmails: { [key: string]: string } = {
-      'admin@educadq.com': 'admin',
-      'professor@educadq.com': 'professor',
-      'aluno@educadq.com': 'aluno',
-      'dev@educadq.com': 'desenvolvedor',
-    };
-    
-    const bypassRole = bypassEmails[email];
+    const bypassRole = bypassEmails[email.trim().toLowerCase()];
     
     if (bypassRole) {
       console.warn(`🔓 BYPASS ATIVO: ${email} -> ${bypassRole}`);
@@ -47,7 +61,10 @@ export default function LoginPage() {
       
       // Simular um pequeno delay de carregamento para UX
       setTimeout(() => {
-        window.location.href = "/admin";
+        // Forçar recarregamento para garantir que o AuthContext pegue o novo role
+        window.location.href = bypassRole === "admin" ? "/admin" : 
+                              bypassRole === "professor" ? "/professor" :
+                              bypassRole === "desenvolvedor" ? "/admin/monitor" : "/student";
       }, 500);
       return;
     }
