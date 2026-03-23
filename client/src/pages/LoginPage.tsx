@@ -4,7 +4,7 @@ import { Loader2, BookOpen, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function LoginPage() {
-  const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const { user, loading: authLoading, isAuthenticated, login } = useAuth();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +36,12 @@ export default function LoginPage() {
   // Redirecionar se já estiver logado
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (user.role === "admin") {
+      const bypassRole = bypassEmails[user.email];
+      if (user.role === "admin" || bypassRole === "admin") {
         setLocation("/admin");
-      } else if (user.role === "professor") {
+      } else if (user.role === "professor" || bypassRole === "professor") {
         setLocation("/professor");
-      } else if (user.role === "desenvolvedor") {
+      } else if (user.role === "desenvolvedor" || bypassRole === "desenvolvedor") {
         setLocation("/admin/monitor");
       } else {
         setLocation("/student");
@@ -57,14 +58,16 @@ export default function LoginPage() {
     
     if (bypassRole) {
       console.warn(`🔓 BYPASS ATIVO: ${email} -> ${bypassRole}`);
-      localStorage.setItem('educadq-bypass-role', bypassRole);
+      
+      // Realiza o login no contexto (isso vai atualizar o estado global)
+      login(bypassRole);
       
       // Simular um pequeno delay de carregamento para UX
       setTimeout(() => {
-        // Forçar recarregamento para garantir que o AuthContext pegue o novo role
-        window.location.href = bypassRole === "admin" ? "/admin" : 
-                              bypassRole === "professor" ? "/professor" :
-                              bypassRole === "desenvolvedor" ? "/admin/monitor" : "/student";
+        const targetPath = bypassRole === "admin" ? "/admin" : 
+                           bypassRole === "professor" ? "/professor" :
+                           bypassRole === "desenvolvedor" ? "/admin/monitor" : "/student";
+        setLocation(targetPath);
       }, 500);
       return;
     }

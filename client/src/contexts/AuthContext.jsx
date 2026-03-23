@@ -1,5 +1,5 @@
 // contexts/AuthContext.js
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { fakeAuthLogin } from '../authV2/fakeAuth';
 
 const AuthContext = createContext();
@@ -7,6 +7,20 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const login = useCallback((role) => {
+    const simulatedUser = fakeAuthLogin(role);
+    setUser(simulatedUser);
+    localStorage.setItem('educadq-bypass-role', role);
+    console.warn('🔓 LOGIN BYPASS REALIZADO:', simulatedUser);
+    return simulatedUser;
+  }, []);
+
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('educadq-bypass-role');
+    console.warn('🔒 LOGOUT BYPASS REALIZADO');
+  }, []);
 
   useEffect(() => {
     // Modo bypass forçado conforme prompt técnico
@@ -17,9 +31,10 @@ export function AuthProvider({ children }) {
     const roleParam = searchParams.get('role');
     const savedRole = localStorage.getItem('educadq-bypass-role');
     
-    const bypassRole = roleParam || savedRole || 'admin';
+    // Se houver role na URL, ele tem prioridade e limpa o login anterior se for diferente
+    const bypassRole = roleParam || savedRole;
 
-    if (bypassAuth) {
+    if (bypassAuth && bypassRole) {
       if (roleParam) localStorage.setItem('educadq-bypass-role', roleParam);
       
       const simulatedUser = fakeAuthLogin(bypassRole);
@@ -27,13 +42,13 @@ export function AuthProvider({ children }) {
       setLoading(false);
       console.warn('🔓 MODO BYPASS ATIVO:', simulatedUser);
     } else {
-      setUser(null);
+      // Se não houver nada, apenas para de carregar mas mantém nulo
       setLoading(false);
     }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
