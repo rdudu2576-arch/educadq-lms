@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('educadq-bypass-role');
+    localStorage.removeItem('educadq-bypass-email');
     console.warn('🔒 LOGOUT BYPASS REALIZADO');
   }, []);
 
@@ -32,10 +33,13 @@ export function AuthProvider({ children }) {
     const savedRole = localStorage.getItem('educadq-bypass-role');
     
     // Se houver role na URL, ele tem prioridade e limpa o login anterior se for diferente
-    const bypassRole = roleParam || savedRole;
+    const bypassRole = roleParam || savedRole || null;
 
     if (bypassAuth && bypassRole) {
-      if (roleParam) localStorage.setItem('educadq-bypass-role', roleParam);
+      // Se houver role na URL, salvar no localStorage para persistência
+      if (roleParam) {
+        localStorage.setItem('educadq-bypass-role', roleParam);
+      }
       
       const simulatedUser = fakeAuthLogin(bypassRole);
       setUser(simulatedUser);

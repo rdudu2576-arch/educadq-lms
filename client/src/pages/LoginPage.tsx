@@ -4,7 +4,7 @@ import { Loader2, BookOpen, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function LoginPage() {
-  const { user, loading: authLoading, isAuthenticated, login } = useAuth();
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,12 +36,11 @@ export default function LoginPage() {
   // Redirecionar se já estiver logado
   useEffect(() => {
     if (isAuthenticated && user) {
-      const bypassRole = bypassEmails[user.email];
-      if (user.role === "admin" || bypassRole === "admin") {
+      if (user.role === "admin") {
         setLocation("/admin");
-      } else if (user.role === "professor" || bypassRole === "professor") {
+      } else if (user.role === "professor") {
         setLocation("/professor");
-      } else if (user.role === "desenvolvedor" || bypassRole === "desenvolvedor") {
+      } else if (user.role === "desenvolvedor") {
         setLocation("/admin/monitor");
       } else {
         setLocation("/student");
@@ -54,20 +53,22 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    const bypassRole = bypassEmails[email.trim().toLowerCase()];
+    const emailLower = email.trim().toLowerCase();
+    const bypassRole = bypassEmails[emailLower];
     
     if (bypassRole) {
       console.warn(`🔓 BYPASS ATIVO: ${email} -> ${bypassRole}`);
-      
-      // Realiza o login no contexto (isso vai atualizar o estado global)
-      login(bypassRole);
+      // Salvar no localStorage para persistência
+      localStorage.setItem('educadq-bypass-role', bypassRole);
+      localStorage.setItem('educadq-bypass-email', emailLower);
       
       // Simular um pequeno delay de carregamento para UX
       setTimeout(() => {
         const targetPath = bypassRole === "admin" ? "/admin" : 
                            bypassRole === "professor" ? "/professor" :
                            bypassRole === "desenvolvedor" ? "/admin/monitor" : "/student";
-        setLocation(targetPath);
+        // Usar window.location.href para garantir que o AuthContext seja reinicializado com o novo role
+        window.location.href = targetPath;
       }, 500);
       return;
     }
@@ -122,12 +123,14 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label htmlFor="email-input" className="block text-sm font-medium text-foreground mb-2">
                 Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
+                  id="email-input"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -135,6 +138,7 @@ export default function LoginPage() {
                   className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                   required
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -142,7 +146,7 @@ export default function LoginPage() {
             {/* Senha */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-foreground">
+                <label htmlFor="password-input" className="block text-sm font-medium text-foreground">
                   Senha
                 </label>
                 <button
@@ -155,6 +159,8 @@ export default function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <input
+                  id="password-input"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -162,6 +168,7 @@ export default function LoginPage() {
                   className="w-full pl-10 pr-4 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground"
                   required
                   disabled={isLoading}
+                  autoComplete="current-password"
                 />
               </div>
             </div>
