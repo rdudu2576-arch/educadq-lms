@@ -1,5 +1,4 @@
 import { TRPCLink } from "@trpc/client";
-import { observable } from "@trpc/server/observable";
 
 // Dados mockados para o bypass
 const mockData: Record<string, any> = {
@@ -72,33 +71,34 @@ const mockData: Record<string, any> = {
   },
 };
 
-// Mock Link para tRPC - Versão Simplificada
+// Mock Link para tRPC - Versão sem Observable
 export const createMockLink = (): TRPCLink<any> => {
   return ({ next, op }) => {
-    return observable((observer) => {
-      // Construir a chave de dados baseada no caminho
-      const key = op.path;
-      
-      // Simular delay de rede
-      const timer = setTimeout(() => {
-        try {
-          // Buscar dados mockados pela chave
-          const data = mockData[key] || {};
+    // Se estiver em modo bypass, retornar dados mockados
+    const key = op.path;
+    const data = mockData[key];
 
-          // Retornar o resultado mockado no formato esperado pelo tRPC
-          observer.next({
-            result: {
-              data,
-            },
-          });
-          observer.complete();
-        } catch (error) {
-          console.error("[Mock Link Error]", error);
-          observer.error(error);
-        }
-      }, 100); // Simular 100ms de latência
+    // Se encontrou dados mockados, retornar imediatamente
+    if (data !== undefined) {
+      return {
+        subscribe(observer: any) {
+          // Simular delay mínimo
+          setTimeout(() => {
+            observer.next({
+              result: {
+                data,
+              },
+            });
+            observer.complete();
+          }, 50);
 
-      return () => clearTimeout(timer);
-    });
+          // Retornar função de cleanup
+          return () => {};
+        },
+      };
+    }
+
+    // Se não encontrou, passar para o próximo link
+    return next(op);
   };
 };
