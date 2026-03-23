@@ -25,7 +25,7 @@ const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
 
-  // Se estamos em modo bypass, ignorar erros de rede
+  // Se estamos em modo bypass, ignorar erros de rede completamente
   if (isBypassMode()) {
     console.warn("[BYPASS MODE] Ignorando erro de rede:", error.message);
     return;
@@ -97,12 +97,28 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-createRoot(document.getElementById("root")!).render(
-  <trpc.Provider client={trpcClient} queryClient={queryClient}>
+// Renderizar com ou sem tRPC Provider dependendo do modo bypass
+const root = createRoot(document.getElementById("root")!);
+
+if (isBypassMode()) {
+  // Em modo bypass, renderizar sem tRPC Provider para evitar erros de rede
+  console.warn("🔓 MODO BYPASS ATIVO - tRPC Provider desabilitado");
+  root.render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
       </AuthProvider>
     </QueryClientProvider>
-  </trpc.Provider>
-);
+  );
+} else {
+  // Em modo normal, renderizar com tRPC Provider
+  root.render(
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
+  );
+}
