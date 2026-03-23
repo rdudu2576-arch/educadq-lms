@@ -23,7 +23,15 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 app.use(cors({
-  origin: true, // Permitir qualquer origem em desenvolvimento/produção com credenciais
+  origin: (origin, callback) => {
+    // Permitir qualquer origem que termine com .vercel.app ou localhost
+    if (!origin || origin.endsWith(".vercel.app") || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      callback(null, true);
+    } else {
+      // Em produção, se o domínio for fixo, você pode adicionar aqui
+      callback(null, true); 
+    }
+  },
   credentials: true,
 }));
 

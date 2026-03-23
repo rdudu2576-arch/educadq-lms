@@ -7,8 +7,10 @@ import { hashPassword, generateToken } from "../../services/auth.service.js";
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  // Na Vercel, se o frontend estiver em outro domínio, SameSite=None é obrigatório.
+  // SameSite=None requer obrigatoriamente Secure=true.
+  secure: true, 
+  sameSite: "none" as const,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 };
@@ -161,8 +163,8 @@ export const authRouter = router({
     // Clear token cookie
     ctx.res.clearCookie("token", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
     });
 

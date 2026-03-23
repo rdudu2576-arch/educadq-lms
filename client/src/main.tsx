@@ -19,9 +19,19 @@ const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   if (!isUnauthorized) return;
 
   const currentPath = window.location.pathname;
+  
+  // Lista de rotas públicas que NÃO devem redirecionar para login se não estiver autenticado
+  const publicPaths = ["/", "/login", "/register", "/forgot-password", "/cursos", "/artigos", "/cursos-gratuitos"];
+  const isPublicPath = publicPaths.includes(currentPath) || 
+                       currentPath.startsWith("/artigos/") || 
+                       currentPath.startsWith("/curso/") ||
+                       currentPath.startsWith("/aluno/") ||
+                       currentPath.startsWith("/profissional/");
+
+  // A query 'auth.me' é usada para verificar o estado inicial e não deve causar redirecionamento global
   const isAuthMe = Array.isArray(queryKey) && queryKey[0] === 'auth' && queryKey[1] === 'me';
   
-  if (currentPath === "/login" || currentPath === "/register" || isAuthMe) {
+  if (isPublicPath || isAuthMe) {
     return;
   }
 

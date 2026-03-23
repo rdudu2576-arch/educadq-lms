@@ -62,11 +62,28 @@ export function useAuth(options?: UseAuthOptions) {
   ]);
 
   useEffect(() => {
-    if (!redirectOnUnauthenticated) return;
-    if (state.loading) return;
+    // Só redireciona se explicitamente solicitado e se não estiver carregando
+    if (!redirectOnUnauthenticated || state.loading) return;
+    
+    // Se já estiver autenticado, não redireciona
     if (state.user) return;
+    
     if (typeof window === "undefined") return;
-    if (window.location.pathname === redirectPath) return;
+    
+    const currentPath = window.location.pathname;
+
+    // Evita loop de redirecionamento
+    if (currentPath === redirectPath) return;
+    
+    // Lista de rotas públicas que NUNCA devem redirecionar automaticamente via hook
+    const publicPaths = ["/", "/login", "/register", "/forgot-password", "/cursos", "/artigos", "/cursos-gratuitos"];
+    const isPublicPath = publicPaths.includes(currentPath) || 
+                         currentPath.startsWith("/artigos/") || 
+                         currentPath.startsWith("/curso/") ||
+                         currentPath.startsWith("/aluno/") ||
+                         currentPath.startsWith("/profissional/");
+
+    if (isPublicPath) return;
 
     window.location.href = redirectPath;
   }, [
