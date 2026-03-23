@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, BookOpen, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
-import { fakeAuthLogin } from "@/authV2/fakeAuth";
-import { trpc } from "@/lib/trpc";
 
 export default function LoginPage() {
   const { user, loading: authLoading, isAuthenticated } = useAuth();
@@ -12,7 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const utils = trpc.useUtils();
 
   // Redirecionar se já estiver logado
   useEffect(() => {
@@ -29,14 +26,12 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, user, setLocation]);
 
-  const loginMutation = trpc.auth.login.useMutation();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // BYPASS INTERCEPTOR: Detectar e-mails de teste ANTES de qualquer chamada ao servidor
+    // BYPASS INTERCEPTOR: Totalmente local, sem chamadas ao servidor
     const bypassEmails: { [key: string]: string } = {
       'admin@educadq.com': 'admin',
       'professor@educadq.com': 'professor',
@@ -48,29 +43,18 @@ export default function LoginPage() {
     
     if (bypassRole) {
       console.warn(`🔓 BYPASS ATIVO: ${email} -> ${bypassRole}`);
-      // Salvar o papel no localStorage para o AuthContext usar
       localStorage.setItem('educadq-bypass-role', bypassRole);
-      // Recarregar a página para o AuthContext injetar o usuário correto
+      
+      // Simular um pequeno delay de carregamento para UX
       setTimeout(() => {
         window.location.href = "/admin";
-      }, 300);
+      }, 500);
       return;
     }
 
-    // Se não for um e-mail de bypass, tentar login real
-    try {
-      const result = await loginMutation.mutateAsync({ email, password });
-      
-      if (result.success) {
-        await utils.auth.me.invalidate();
-        await utils.auth.me.fetch();
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Erro ao fazer login. Verifique suas credenciais.");
-    } finally {
-      setIsLoading(false);
-    }
+    // Se não for bypass, avisar que o servidor está offline
+    setError("O servidor de autenticação real está offline. Use os e-mails de teste para acessar.");
+    setIsLoading(false);
   };
 
   if (authLoading) {
@@ -143,7 +127,6 @@ export default function LoginPage() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => setLocation("/forgot-password")}
                   className="text-xs text-primary hover:underline font-medium"
                 >
                   Esqueci minha senha
@@ -186,7 +169,6 @@ export default function LoginPage() {
               Ainda não tem uma conta?
             </p>
             <button
-              onClick={() => setLocation("/register")}
               className="w-full py-2 px-4 border border-primary text-primary hover:bg-primary/5 font-medium rounded-lg transition-colors"
             >
               Criar minha conta grátis
@@ -195,24 +177,6 @@ export default function LoginPage() {
 
           {/* Informações adicionais */}
           <div className="mt-6 text-center">
-            <button
-              onClick={async () => {
-                if (!email) {
-                  alert("Digite seu email primeiro!");
-                  return;
-                }
-                try {
-                  // @ts-ignore
-                  const res = await utils.client.system.makeMeAdmin.mutate({ email });
-                  alert(res.message);
-                } catch (e) {
-                  alert("Erro ao tornar admin: " + (e as Error).message);
-                }
-              }}
-              className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
-            >
-              [Acesso de Recuperação ADM]
-            </button>
             <p className="text-xs text-muted-foreground mt-4">
               Centro de Formação e Estudos sobre Álcool e outras Drogas LTDA
             </p>
