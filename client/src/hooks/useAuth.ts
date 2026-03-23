@@ -1,8 +1,7 @@
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
+import { useCallback, useEffect, useMemo } from "react";
+import { useAuth as useBypassAuth } from "@/contexts/AuthContext";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
@@ -12,36 +11,39 @@ type UseAuthOptions = {
 export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath = getLoginUrl() } =
     options ?? {};
-  const utils = trpc.useUtils();
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [fbLoading, setFbLoading] = useState(true);
-
-  // PROBLEMA IDENTIFICADO: O hook useAuth dependia exclusivamente do estado do Firebase.
-  // CAUSA RAIZ: O sistema foi migrado para JWT/Cookies no backend, mas o frontend ainda buscava o Firebase.
-  // CORREÇÃO: Alterado para depender da query 'me' do tRPC, que valida o cookie JWT.
-  // POR QUE RESOLVE: Garante que a sessão seja persistida via cookies, independente do Firebase.
+  
+  // 1. Tentar obter o usuário do AuthContext (Bypass)
+  const bypass = useBypassAuth();
+  
+  // 2. Query real do tRPC (para quando o bypass estiver desligado)
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: true,
+    enabled: !bypass.user, // Só roda se não houver usuário bypass
   });
 
   const logoutMutation = trpc.auth.logout.useMutation();
 
   const logout = useCallback(async () => {
     try {
+      // Se estiver em modo bypass, apenas recarregue ou limpe (o bypass é forçado no context)
+      if (bypass.user) {
+        window.location.href = "/login";
+        return;
+      }
       await logoutMutation.mutateAsync();
-      utils.auth.me.setData(undefined, null);
-      await utils.auth.me.invalidate();
       window.location.href = "/login";
     } catch (error: unknown) {
       console.error("Erro ao fazer logout:", error);
-      throw error;
+      window.location.href = "/login";
     }
-  }, [utils, logoutMutation]);
+  }, [logoutMutation, bypass.user]);
 
   const state = useMemo(() => {
-    const user = meQuery.data ?? null;
-    
+    // Prioridade total para o usuário do Bypass se ele existir
+    const user = bypass.user || meQuery.data || null;
+    const loading = bypass.loading || (bypass.user ? false : meQuery.isLoading);
+
     if (user) {
       localStorage.setItem(
         "manus-runtime-user-info",
@@ -51,31 +53,26 @@ export function useAuth(options?: UseAuthOptions) {
 
     return {
       user,
-      loading: meQuery.isLoading,
+      loading,
       error: meQuery.error ?? null,
-      isAuthenticated: !!meQuery.data,
+      isAuthenticated: !!user,
     };
   }, [
+    bypass.user,
+    bypass.loading,
     meQuery.data,
     meQuery.error,
     meQuery.isLoading,
   ]);
 
   useEffect(() => {
-    // Só redireciona se explicitamente solicitado e se não estiver carregando
     if (!redirectOnUnauthenticated || state.loading) return;
-    
-    // Se já estiver autenticado, não redireciona
     if (state.user) return;
-    
     if (typeof window === "undefined") return;
     
     const currentPath = window.location.pathname;
-
-    // Evita loop de redirecionamento
     if (currentPath === redirectPath) return;
     
-    // Lista de rotas públicas que NUNCA devem redirecionar automaticamente via hook
     const publicPaths = ["/", "/login", "/register", "/forgot-password", "/cursos", "/artigos", "/cursos-gratuitos"];
     const isPublicPath = publicPaths.includes(currentPath) || 
                          currentPath.startsWith("/artigos/") || 

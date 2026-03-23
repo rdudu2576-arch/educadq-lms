@@ -9,17 +9,24 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // No ambiente do Manus, vamos usar o modo bypass por padrão para facilitar os testes solicitados
-    const bypassAuth = import.meta.env.VITE_BYPASS_AUTH === 'true' || true;
-    const bypassRole = import.meta.env.VITE_BYPASS_AUTH_ROLE || 'admin';
+    // Modo bypass forçado conforme prompt técnico
+    const bypassAuth = true;
+    
+    // Tenta pegar o papel do localStorage ou query param para facilitar a troca de perfil
+    const searchParams = new URLSearchParams(window.location.search);
+    const roleParam = searchParams.get('role');
+    const savedRole = localStorage.getItem('educadq-bypass-role');
+    
+    const bypassRole = roleParam || savedRole || 'admin';
 
     if (bypassAuth) {
+      if (roleParam) localStorage.setItem('educadq-bypass-role', roleParam);
+      
       const simulatedUser = fakeAuthLogin(bypassRole);
       setUser(simulatedUser);
       setLoading(false);
       console.warn('🔓 MODO BYPASS ATIVO:', simulatedUser);
     } else {
-      // Aqui viria a autenticação real com Supabase/Firebase
       setUser(null);
       setLoading(false);
     }
