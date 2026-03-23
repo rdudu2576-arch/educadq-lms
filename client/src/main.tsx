@@ -8,6 +8,7 @@ import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { getLoginUrl } from "./const";
 import { auth } from "@/lib/firebase";
+import { createMockLink } from "@/lib/mockLink";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -79,8 +80,12 @@ queryClient.getMutationCache().subscribe(event => {
   }
 });
 
+// Criar o cliente tRPC com suporte a bypass
 const trpcClient = trpc.createClient({
   links: [
+    // Se estiver em modo bypass, usar o mockLink
+    ...(isBypassMode() ? [createMockLink()] : []),
+    // Sempre incluir o httpBatchLink como fallback
     httpBatchLink({
       url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
       transformer: superjson,
@@ -97,28 +102,17 @@ const trpcClient = trpc.createClient({
   ],
 });
 
-// Renderizar com ou sem tRPC Provider dependendo do modo bypass
-const root = createRoot(document.getElementById("root")!);
-
+// Log de inicialização
 if (isBypassMode()) {
-  // Em modo bypass, renderizar sem tRPC Provider para evitar erros de rede
-  console.warn("🔓 MODO BYPASS ATIVO - tRPC Provider desabilitado");
-  root.render(
+  console.warn("🔓 MODO BYPASS ATIVO - Mock Link habilitado para tRPC");
+}
+
+createRoot(document.getElementById("root")!).render(
+  <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <App />
       </AuthProvider>
     </QueryClientProvider>
-  );
-} else {
-  // Em modo normal, renderizar com tRPC Provider
-  root.render(
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
-  );
-}
+  </trpc.Provider>
+);
