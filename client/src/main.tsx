@@ -81,31 +81,39 @@ queryClient.getMutationCache().subscribe(event => {
 });
 
 // Criar o cliente tRPC com suporte a bypass
-const trpcClient = trpc.createClient({
-  links: [
-    // Se estiver em modo bypass, usar o mockLink
-    ...(isBypassMode() ? [createMockLink()] : []),
-    // Sempre incluir o httpBatchLink como fallback
-    httpBatchLink({
-      url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
-      transformer: superjson,
-      async headers() {
-        return {};
-      },
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
-      },
-    }),
-  ],
-});
+const createTrpcClient = () => {
+  // Se estiver em modo bypass, usar o mockLink como primeiro link
+  if (isBypassMode()) {
+    console.warn("🔓 MODO BYPASS ATIVO - Mock Link habilitado para tRPC");
+    
+    return trpc.createClient({
+      links: [
+        createMockLink(),
+      ],
+    });
+  }
 
-// Log de inicialização
-if (isBypassMode()) {
-  console.warn("🔓 MODO BYPASS ATIVO - Mock Link habilitado para tRPC");
-}
+  // Em modo normal, usar httpBatchLink
+  return trpc.createClient({
+    links: [
+      httpBatchLink({
+        url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
+        transformer: superjson,
+        async headers() {
+          return {};
+        },
+        fetch(input, init) {
+          return globalThis.fetch(input, {
+            ...(init ?? {}),
+            credentials: "include",
+          });
+        },
+      }),
+    ],
+  });
+};
+
+const trpcClient = createTrpcClient();
 
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
