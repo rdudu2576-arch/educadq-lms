@@ -16,10 +16,11 @@ export function useAuth(options?: UseAuthOptions) {
   const bypass = useBypassAuth();
   
   // 2. Query real do tRPC (para quando o bypass estiver desligado)
+  // IMPORTANTE: Desabilitar completamente se houver usuário bypass para evitar erros de rede
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
-    refetchOnWindowFocus: true,
-    enabled: !bypass.user, // Só roda se não houver usuário bypass
+    refetchOnWindowFocus: false,
+    enabled: bypass.user ? false : true,
   });
 
   const logoutMutation = trpc.auth.logout.useMutation();

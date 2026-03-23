@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, BookOpen, Mail, Lock, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { fakeAuthLogin } from "@/authV2/fakeAuth";
 import { trpc } from "@/lib/trpc";
 
 export default function LoginPage() {
@@ -22,6 +21,8 @@ export default function LoginPage() {
         setLocation("/admin");
       } else if (user.role === "professor") {
         setLocation("/professor");
+      } else if (user.role === "desenvolvedor") {
+        setLocation("/admin/monitor");
       } else {
         setLocation("/student");
       }
@@ -35,19 +36,28 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    // MODO BYPASS ATIVO: O login aceita qualquer senha para os e-mails de teste
-    const bypassEmails = ['admin@educadq.com', 'professor@educadq.com', 'aluno@educadq.com', 'dev@educadq.com'];
+    // BYPASS INTERCEPTOR: Detectar e-mails de teste ANTES de qualquer chamada ao servidor
+    const bypassEmails: { [key: string]: string } = {
+      'admin@educadq.com': 'admin',
+      'professor@educadq.com': 'professor',
+      'aluno@educadq.com': 'aluno',
+      'dev@educadq.com': 'desenvolvedor',
+    };
     
-    if (bypassEmails.includes(email)) {
-      console.warn('🔓 LOGIN BYPASS DETECTADO:', email);
-      // No modo bypass, o AuthContext já injeta o usuário baseado no papel
-      // O redirecionamento será tratado pelo useEffect de autenticação
+    const bypassRole = bypassEmails[email];
+    
+    if (bypassRole) {
+      console.warn(`🔓 BYPASS ATIVO: ${email} -> ${bypassRole}`);
+      // Salvar o papel no localStorage para o AuthContext usar
+      localStorage.setItem('educadq-bypass-role', bypassRole);
+      // Recarregar a página para o AuthContext injetar o usuário correto
       setTimeout(() => {
-        window.location.reload(); // Força recarga para o AuthContext pegar o novo estado se necessário
-      }, 500);
+        window.location.href = "/admin";
+      }, 300);
       return;
     }
 
+    // Se não for um e-mail de bypass, tentar login real
     try {
       const result = await loginMutation.mutateAsync({ email, password });
       
@@ -208,6 +218,13 @@ export default function LoginPage() {
             </p>
             <p className="text-xs text-muted-foreground mt-2">
               EducaDQ © 2026 - Todos os direitos reservados
+            </p>
+          </div>
+
+          {/* Dica de Teste */}
+          <div className="mt-6 p-3 bg-cyan-900/20 border border-cyan-500/30 rounded-lg">
+            <p className="text-xs text-cyan-400 font-mono">
+              💡 Teste: admin@educadq.com | professor@educadq.com | aluno@educadq.com | dev@educadq.com
             </p>
           </div>
         </div>
