@@ -18,17 +18,27 @@ export function useAuth(options?: UseAuthOptions) {
   // 2. Query real do tRPC (para quando o bypass estiver desligado)
   // IMPORTANTE: Desabilitar completamente se houver usuário bypass para evitar erros de rede
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: false,
+    retry: 0,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
     enabled: bypass.user ? false : true,
   });
 
-  const logoutMutation = trpc.auth.logout.useMutation();
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onError: () => {
+      // Silenciar erros de logout em modo bypass
+      if (bypass.user) {
+        window.location.href = "/login";
+      }
+    },
+  });
 
   const logout = useCallback(async () => {
     try {
       // Se estiver em modo bypass, apenas recarregue ou limpe (o bypass é forçado no context)
       if (bypass.user) {
+        localStorage.removeItem('educadq-bypass-role');
         window.location.href = "/login";
         return;
       }
@@ -55,7 +65,7 @@ export function useAuth(options?: UseAuthOptions) {
     return {
       user,
       loading,
-      error: meQuery.error ?? null,
+      error: bypass.user ? null : (meQuery.error ?? null),
       isAuthenticated: !!user,
     };
   }, [
@@ -70,6 +80,9 @@ export function useAuth(options?: UseAuthOptions) {
     if (!redirectOnUnauthenticated || state.loading) return;
     if (state.user) return;
     if (typeof window === "undefined") return;
+    
+    // Se estamos em modo bypass, não redirecionar (o bypass controla o fluxo)
+    if (bypass.user) return;
     
     const currentPath = window.location.pathname;
     if (currentPath === redirectPath) return;
@@ -89,6 +102,7 @@ export function useAuth(options?: UseAuthOptions) {
     redirectPath,
     state.loading,
     state.user,
+    bypass.user,
   ]);
 
   return {

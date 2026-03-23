@@ -12,9 +12,24 @@ import "./index.css";
 
 const queryClient = new QueryClient();
 
+// Verificar se estamos em modo bypass
+const isBypassMode = () => {
+  try {
+    return localStorage.getItem('educadq-bypass-role') !== null;
+  } catch {
+    return false;
+  }
+};
+
 const redirectToLoginIfUnauthorized = (error: unknown, queryKey?: any) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
+
+  // Se estamos em modo bypass, ignorar erros de rede
+  if (isBypassMode()) {
+    console.warn("[BYPASS MODE] Ignorando erro de rede:", error.message);
+    return;
+  }
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
   if (!isUnauthorized) return;
@@ -44,7 +59,11 @@ queryClient.getQueryCache().subscribe(event => {
     const error = event.query.state.error;
     const queryKey = event.query.queryKey;
     redirectToLoginIfUnauthorized(error, queryKey);
-    console.error("[API Query Error]", error);
+    
+    // Silenciar erros de rede em modo bypass
+    if (!isBypassMode()) {
+      console.error("[API Query Error]", error);
+    }
   }
 });
 
@@ -52,7 +71,11 @@ queryClient.getMutationCache().subscribe(event => {
   if (event.type === "updated" && event.action.type === "error") {
     const error = event.mutation.state.error;
     redirectToLoginIfUnauthorized(error);
-    console.error("[API Mutation Error]", error);
+    
+    // Silenciar erros de rede em modo bypass
+    if (!isBypassMode()) {
+      console.error("[API Mutation Error]", error);
+    }
   }
 });
 
@@ -62,10 +85,6 @@ const trpcClient = trpc.createClient({
       url: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/trpc` : "/api/trpc",
       transformer: superjson,
       async headers() {
-        // PROBLEMA IDENTIFICADO: O frontend tentava enviar um token do Firebase no header Authorization.
-        // CAUSA RAIZ: O backend foi migrado para JWT/Cookies, tornando o token do Firebase irrelevante ou conflitante.
-        // CORREÇÃO: Removida a lógica de header do Firebase. O backend agora usa cookies HttpOnly (credentials: "include").
-        // POR QUE RESOLVE: Permite que o navegador envie automaticamente o cookie JWT, simplificando o fluxo.
         return {};
       },
       fetch(input, init) {
