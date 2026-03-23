@@ -1,12 +1,12 @@
 import { Route, Redirect } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 
 interface ProtectedRouteProps {
   path: string;
   component: React.ComponentType<any>;
-  requiredRole?: "admin" | "user" | "professor";
+  requiredRole?: "admin" | "user" | "professor" | "aluno" | "desenvolvedor";
 }
 
 export default function ProtectedRoute({ path, component: Component, requiredRole }: ProtectedRouteProps) {
@@ -40,7 +40,7 @@ export default function ProtectedRoute({ path, component: Component, requiredRol
     );
   }
 
-  if (requiredRole && user.role !== requiredRole && user.role !== "admin") {
+  if (requiredRole && user.role !== requiredRole && user.role !== "admin" && user.role !== "desenvolvedor") {
     return (
       <Route path={path}>
         <Redirect to="/403" />

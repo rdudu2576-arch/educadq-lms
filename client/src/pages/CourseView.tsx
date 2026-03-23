@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, FileText, Video, Users, Lock, CheckCircle, ExternalLink, FolderOpen, ArrowLeft, BookOpen } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useContentProtection } from "@/hooks/useContentProtection";
+import { AulaProtegida } from "@/components/AulaProtegida";
 import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { extractYouTubeId } from "@/services/lessonService";
@@ -282,14 +283,16 @@ export default function CourseView({ params }: CourseViewProps) {
                 {currentLesson.type === "text" && (
                   <Card className="bg-slate-800 border-slate-700">
                     <CardContent className="pt-6">
-                      {currentLesson.content ? (
-                        <div
-                          className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-300 prose-a:text-cyan-400 prose-strong:text-white"
-                          dangerouslySetInnerHTML={{ __html: currentLesson.content }}
-                        />
-                      ) : (
-                        <p className="text-slate-400">Conteúdo da aula não disponível.</p>
-                      )}
+                      <AulaProtegida>
+                        {currentLesson.content ? (
+                          <div
+                            className="prose prose-invert max-w-none prose-headings:text-white prose-p:text-slate-300 prose-a:text-cyan-400 prose-strong:text-white"
+                            dangerouslySetInnerHTML={{ __html: currentLesson.content }}
+                          />
+                        ) : (
+                          <p className="text-slate-400">Conteúdo da aula não disponível.</p>
+                        )}
+                      </AulaProtegida>
                     </CardContent>
                   </Card>
                 )}
@@ -352,26 +355,39 @@ export default function CourseView({ params }: CourseViewProps) {
                   </Card>
                 )}
 
-                {/* Complete Button */}
-                {!completedLessonIds.has(currentLesson.id) ? (
-                  <Button
-                    onClick={() => handleLessonComplete(currentLesson.id)}
-                    disabled={completionMutation.isPending}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
-                    size="lg"
-                  >
-                    {completionMutation.isPending ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Marcando...</>
-                    ) : (
-                      <><CheckCircle className="w-4 h-4 mr-2" /> Marcar como Concluída</>
-                    )}
-                  </Button>
-                ) : (
-                  <div className="flex items-center justify-center gap-2 py-3 text-green-400">
-                    <CheckCircle className="w-5 h-5" />
-                    <span className="font-semibold">Aula concluída</span>
-                  </div>
-                )}
+                {/* Complete Button & Continue */}
+                <div className="flex flex-col gap-4">
+                  {!completedLessonIds.has(currentLesson.id) ? (
+                    <Button
+                      onClick={() => handleLessonComplete(currentLesson.id)}
+                      disabled={completionMutation.isPending}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                      size="lg"
+                    >
+                      {completionMutation.isPending ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Marcando...</>
+                      ) : (
+                        <><CheckCircle className="w-4 h-4 mr-2" /> Marcar como Concluída</>
+                      )}
+                    </Button>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2 py-3 text-green-400">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="font-semibold">Aula concluída</span>
+                    </div>
+                  )}
+
+                  {selectedLessonIndex < lessons.length - 1 && (
+                    <Button
+                      onClick={() => handleSelectLesson(selectedLessonIndex + 1)}
+                      variant="outline"
+                      className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 py-3"
+                      size="lg"
+                    >
+                      Continuar <ArrowLeft className="w-4 h-4 ml-2 rotate-180" />
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center py-16">

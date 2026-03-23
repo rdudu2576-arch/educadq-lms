@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "wouter";
 
 interface SystemLog {
@@ -21,9 +21,9 @@ export default function MonitorPage() {
   const { user } = useAuth();
   const [, navigate] = useRouter();
 
-  // Verificar se é admin
+  // Verificar se é admin ou desenvolvedor
   useEffect(() => {
-    if (user && user.role !== "admin") {
+    if (user && user.role !== "admin" && user.role !== "desenvolvedor") {
       navigate("/403");
     }
   }, [user, navigate]);
@@ -122,6 +122,28 @@ export default function MonitorPage() {
               </div>
             </div>
           </CardHeader>
+          {user?.role === "desenvolvedor" && (
+            <CardContent className="border-t border-slate-700 pt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 bg-slate-900 rounded-lg border border-cyan-500/30">
+                  <p className="text-xs text-cyan-500 font-bold uppercase mb-1">Mock Data</p>
+                  <p className="text-xs text-slate-400">Ativo</p>
+                </div>
+                <div className="p-3 bg-slate-900 rounded-lg border border-cyan-500/30">
+                  <p className="text-xs text-cyan-500 font-bold uppercase mb-1">Performance</p>
+                  <p className="text-xs text-slate-400">Normal (24ms)</p>
+                </div>
+                <div className="p-3 bg-slate-900 rounded-lg border border-cyan-500/30">
+                  <p className="text-xs text-cyan-500 font-bold uppercase mb-1">Network</p>
+                  <p className="text-xs text-slate-400">Intercepter ON</p>
+                </div>
+                <div className="p-3 bg-slate-900 rounded-lg border border-cyan-500/30">
+                  <p className="text-xs text-cyan-500 font-bold uppercase mb-1">State</p>
+                  <p className="text-xs text-slate-400">Inspecting...</p>
+                </div>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         {/* Filtros */}

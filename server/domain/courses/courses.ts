@@ -297,6 +297,40 @@ export const coursesRouter = router({
       return await getCourses(input.limit, input.offset);
     }),
 
+  delete: protectedProcedure
+    .input(z.object({ courseId: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const course = await getCourseById(input.courseId);
+      if (!course) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Course not found",
+        });
+      }
+
+      if (ctx.user?.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Only admins can delete courses",
+        });
+      }
+
+      const db = await getDb();
+      if (!db) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Database connection failed",
+        });
+      }
+
+      // Importar dinamicamente para evitar problemas de dependência circular
+      const { courses } = await import("../../infra/schema.pg.js");
+      const { eq } = await import("drizzle-orm");
+
+      await db.delete(courses).where(eq(courses.id, input.courseId));
+      return { success: true };
+    }),
+
   getCourseMaterials: publicProcedure
     .input(z.object({ courseId: z.number() }))
     .query(async ({ input }) => {
