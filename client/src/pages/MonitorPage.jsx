@@ -18,9 +18,9 @@ export default function MonitorPage() {
     var _c = useState("all"), filterLevel = _c[0], setFilterLevel = _c[1];
     var user = useAuth().user;
     var _d = useRouter(), navigate = _d[1];
-    // Verificar se é admin
+    // Verificar se é admin ou desenvolvedor
     useEffect(function () {
-        if (user && user.role !== "admin") {
+        if (user && user.role !== "admin" && user.role !== "desenvolvedor") {
             navigate("/403");
         }
     }, [user, navigate]);
